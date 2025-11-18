@@ -1,0 +1,38 @@
+.product-image-container {
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    padding: 1rem;
+    background-color: #f8f9fa;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 250px;
+}
+
+.product-image-container img {
+    max-height: 300px;
+    object-fit: contain;
+}
+
+.info-box {
+    padding: 0.5rem 0;
+}
+
+.info-label {
+    display: block;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #6c757d;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 0.5rem;
+}
+
+.info-value {
+    font-size: 1rem;
+    color: #212529;
+}
+
+.font-monospace {
+    font-family: 'Courier New', Courier, monospace;
+}
