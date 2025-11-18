@@ -1,0 +1,12 @@
+.card-header {
+    font-weight: 600;
+}
+
+.badge {
+    font-size: 0.75rem;
+}
+
+.alert-heading {
+    font-size: 1.5rem;
+    margin-bottom: 0.75rem;
+}

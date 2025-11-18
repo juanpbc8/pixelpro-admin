@@ -1,0 +1,135 @@
+<div class="container-fluid py-4">
+  @if (loading()) {
+  <div class="text-center py-5">
+    <div class="spinner-border text-primary" role="status">
+      <span class="visually-hidden">Cargando usuario...</span>
+    </div>
+    <p class="mt-3 text-muted">Cargando usuario...</p>
+  </div>
+  } @else if (notFound()) {
+  <div class="alert alert-warning" role="alert">
+    <h4 class="alert-heading">Usuario no encontrado</h4>
+    <p>El usuario que buscas no existe o ha sido eliminado.</p>
+    <hr>
+    <button type="button" class="btn btn-primary" (click)="goBack()">
+      Volver a la lista
+    </button>
+  </div>
+  } @else if (user() && userForm) {
+  <div class="row justify-content-center">
+    <div class="col-lg-8">
+      <div class="mb-4">
+        <h1 class="h3 mb-1">Editar usuario</h1>
+        <p class="text-muted mb-0">Modificar la información del usuario</p>
+      </div>
+
+      <!-- Formulario principal -->
+      <div class="card mb-4">
+        <div class="card-header bg-primary text-white">
+          <h5 class="mb-0">Información del usuario</h5>
+        </div>
+        <div class="card-body p-4">
+          <form [formGroup]="userForm" (ngSubmit)="onSubmit()">
+            <!-- Email (readonly) -->
+            <div class="mb-3">
+              <label for="email" class="form-label">Correo electrónico</label>
+              <input type="email" class="form-control" id="email" formControlName="email" readonly />
+              <small class="text-muted">El correo no puede ser modificado</small>
+            </div>
+
+            <!-- Role -->
+            <div class="mb-3">
+              <label for="roleId" class="form-label">Rol</label>
+              <select class="form-select" id="roleId" formControlName="roleId"
+                [class.is-invalid]="userForm.get('roleId')?.invalid && userForm.get('roleId')?.touched">
+                <option value="">Seleccione un rol</option>
+                @for (role of roles(); track role.id) {
+                <option [value]="role.id">{{ role.name }} - {{ role.description }}</option>
+                }
+              </select>
+              @if (getErrorMessage('roleId', userForm)) {
+              <div class="invalid-feedback d-block">
+                {{ getErrorMessage('roleId', userForm) }}
+              </div>
+              }
+            </div>
+
+            <!-- Enabled -->
+            <div class="mb-4">
+              <div class="form-check">
+                <input class="form-check-input" type="checkbox" id="enabled" formControlName="enabled" />
+                <label class="form-check-label" for="enabled">
+                  Usuario activo
+                </label>
+              </div>
+            </div>
+
+            <!-- Buttons -->
+            <div class="d-flex gap-2">
+              <button type="submit" class="btn btn-primary">
+                Guardar cambios
+              </button>
+              <button type="button" class="btn btn-secondary" (click)="onCancel()">
+                Cancelar
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- Formulario de restablecimiento de contraseña -->
+      <div class="card">
+        <div class="card-header bg-warning text-dark">
+          <h5 class="mb-0">Restablecer contraseña</h5>
+        </div>
+        <div class="card-body p-4">
+          @if (passwordResetSuccess()) {
+          <div class="alert alert-success" role="alert">
+            Contraseña actualizada (simulado).
+          </div>
+          }
+
+          <form [formGroup]="passwordForm" (ngSubmit)="onResetPassword()">
+            <!-- New Password -->
+            <div class="mb-3">
+              <label for="newPassword" class="form-label">Nueva contraseña</label>
+              <input type="password" class="form-control" id="newPassword" formControlName="newPassword"
+                [class.is-invalid]="passwordForm.get('newPassword')?.invalid && passwordForm.get('newPassword')?.touched"
+                placeholder="Mínimo 8 caracteres" />
+              @if (getErrorMessage('newPassword', passwordForm)) {
+              <div class="invalid-feedback d-block">
+                {{ getErrorMessage('newPassword', passwordForm) }}
+              </div>
+              }
+            </div>
+
+            <!-- Confirm New Password -->
+            <div class="mb-3">
+              <label for="confirmNewPassword" class="form-label">Confirmar contraseña</label>
+              <input type="password" class="form-control" id="confirmNewPassword"
+                formControlName="confirmNewPassword"
+                [class.is-invalid]="(passwordForm.get('confirmNewPassword')?.invalid && passwordForm.get('confirmNewPassword')?.touched) || getPasswordMismatchError()"
+                placeholder="Repita la contraseña" />
+              @if (getErrorMessage('confirmNewPassword', passwordForm)) {
+              <div class="invalid-feedback d-block">
+                {{ getErrorMessage('confirmNewPassword', passwordForm) }}
+              </div>
+              }
+              @if (getPasswordMismatchError()) {
+              <div class="invalid-feedback d-block">
+                {{ getPasswordMismatchError() }}
+              </div>
+              }
+            </div>
+
+            <!-- Button -->
+            <button type="submit" class="btn btn-warning">
+              Actualizar contraseña
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+  }
+</div>

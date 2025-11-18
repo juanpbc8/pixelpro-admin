@@ -1,0 +1,40 @@
+<div class="container-fluid py-4">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h1 class="h3 mb-1">Roles</h1>
+      <p class="text-muted mb-0">Roles disponibles en el sistema</p>
+    </div>
+    <button type="button" class="btn btn-secondary" (click)="goBack()">
+      Volver a usuarios
+    </button>
+  </div>
+
+  <div class="alert alert-info" role="alert">
+    Los roles definen los permisos y nivel de acceso de cada usuario. Esta vista es solo informativa en esta versión.
+  </div>
+
+  <div class="card">
+    <div class="card-body">
+      <div class="table-responsive">
+        <table class="table table-hover align-middle">
+          <thead>
+            <tr>
+              <th>Nombre del rol</th>
+              <th>Descripción</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (role of roles(); track role.id) {
+            <tr>
+              <td>
+                <span class="badge bg-info">{{ role.name }}</span>
+              </td>
+              <td>{{ role.description || 'Sin descripción' }}</td>
+            </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
