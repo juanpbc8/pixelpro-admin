@@ -1,0 +1,12 @@
+.form-label {
+    font-weight: 500;
+    margin-bottom: 0.5rem;
+}
+
+.is-invalid~.invalid-feedback {
+    display: block;
+}
+
+.card {
+    max-width: 600px;
+}

@@ -1,0 +1,61 @@
+<div class="container-fluid">
+  <div class="row mb-4">
+    <div class="col-12">
+      <h2 class="mb-1">Nueva categoría</h2>
+      <p class="text-muted mb-0">Crear una nueva categoría en el catálogo</p>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-lg-6 col-xl-5">
+      <div class="card border-0 shadow-sm">
+        <div class="card-body p-4">
+          <form [formGroup]="categoryForm" (ngSubmit)="onSubmit()">
+            <div class="mb-3">
+              <label for="name" class="form-label">
+                Nombre <span class="text-danger">*</span>
+              </label>
+              <input type="text" class="form-control" id="name" formControlName="name"
+                [class.is-invalid]="isFieldInvalid('name')" placeholder="Nombre de la categoría">
+              @if (isFieldInvalid('name')) {
+              <div class="invalid-feedback">
+                {{ getFieldError('name') }}
+              </div>
+              }
+            </div>
+
+            <div class="mb-4">
+              <label for="parentCategoryId" class="form-label">
+                Categoría padre
+              </label>
+              <select class="form-select" id="parentCategoryId" formControlName="parentCategoryId">
+                <option [value]="null">Sin categoría padre</option>
+                @for (category of parentCategories(); track category.id) {
+                <option [value]="category.id">{{ category.name }}</option>
+                }
+              </select>
+              <small class="text-muted">
+                Opcional: selecciona una categoría padre si esta es una subcategoría
+              </small>
+            </div>
+
+            <div class="d-flex justify-content-end gap-2 pt-3 border-top">
+              <button type="button" class="btn btn-secondary" (click)="onCancel()" [disabled]="isSubmitting()">
+                Cancelar
+              </button>
+              <button type="submit" class="btn btn-primary" [disabled]="isSubmitting()">
+                @if (isSubmitting()) {
+                <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                Guardando...
+                } @else {
+                <i class="bi bi-save me-2"></i>
+                Guardar categoría
+                }
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,27 +1,93 @@
-import { Component, ChangeDetectionStrategy } from '@angular/core';
+import { Component, ChangeDetectionStrategy, signal, computed, OnInit, inject } from '@angular/core';
+import { Router } from '@angular/router';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { Category } from '../../models/category.model';
+import { CategoryService } from '../../services/category.service';
 
 @Component({
-    selector: 'app-categories-list',
-    imports: [],
-    template: `
-    <div class="container-fluid">
-      <div class="row mb-4">
-        <div class="col-12 d-flex justify-content-between align-items-center">
-          <h2 class="mb-0">Categorías</h2>
-          <button class="btn btn-primary">
-            <i class="bi bi-plus-circle me-2"></i>Agregar Categoría
-          </button>
-        </div>
-      </div>
-      
-      <div class="card border-0 shadow-sm">
-        <div class="card-body">
-          <p class="text-muted">La lista de categorías se mostrará aquí.</p>
-        </div>
-      </div>
-    </div>
-  `,
-    styles: [],
-    changeDetection: ChangeDetectionStrategy.OnPush
+  selector: 'app-categories-list',
+  imports: [CommonModule, FormsModule],
+  templateUrl: './categories-list.component.html',
+  styleUrl: './categories-list.component.css',
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class CategoriesListComponent { }
+export class CategoriesListComponent implements OnInit {
+  private readonly categoryService = inject(CategoryService);
+  private readonly router = inject(Router);
+
+  readonly categories = signal<Category[]>([]);
+  readonly searchTerm = signal<string>('');
+  readonly isLoading = signal<boolean>(false);
+
+  readonly filteredCategories = computed(() => {
+    const term = this.searchTerm().toLowerCase().trim();
+    if (!term) {
+      return this.categories();
+    }
+    return this.categories().filter(category =>
+      category.name.toLowerCase().includes(term)
+    );
+  });
+
+  ngOnInit(): void {
+    this.loadCategories();
+  }
+
+  loadCategories(): void {
+    this.isLoading.set(true);
+    this.categoryService.getCategories().subscribe({
+      next: (categories) => {
+        this.categories.set(categories);
+        this.isLoading.set(false);
+      },
+      error: (error) => {
+        console.error('Error loading categories:', error);
+        this.isLoading.set(false);
+      }
+    });
+  }
+
+  onSearchChange(value: string): void {
+    this.searchTerm.set(value);
+  }
+
+  navigateToCreate(): void {
+    this.router.navigate(['/categories/new']);
+  }
+
+  navigateToEdit(id: number): void {
+    this.router.navigate(['/categories', id, 'edit']);
+  }
+
+  onDelete(category: Category): void {
+    const confirmed = confirm(`¿Estás seguro de eliminar la categoría "${category.name}"?`);
+    if (!confirmed) return;
+
+    this.categoryService.deleteCategory(category.id!).subscribe({
+      next: () => {
+        this.loadCategories();
+      },
+      error: (error) => {
+        console.error('Error deleting category:', error);
+        alert('Error al eliminar la categoría');
+      }
+    });
+  }
+
+  getParentCategoryName(parentId: number | null | undefined): string {
+    return this.categoryService.getCategoryNameById(parentId);
+  }
+
+  formatDate(dateString?: string): string {
+    if (!dateString) return '-';
+    const date = new Date(dateString);
+    return new Intl.DateTimeFormat('es-MX', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit'
+    }).format(date);
+  }
+}
