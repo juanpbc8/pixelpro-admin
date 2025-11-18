@@ -1,5 +1,5 @@
 import { Routes } from '@angular/router';
-import { ProductListComponent } from './pages/list/product-list.component';
+import { ProductsListComponent } from './pages/list/products-list.component';
 import { ProductCreateComponent } from './pages/create/product-create.component';
 import { ProductEditComponent } from './pages/edit/product-edit.component';
 import { ProductDetailsComponent } from './pages/details/product-details.component';
@@ -7,7 +7,7 @@ import { ProductDetailsComponent } from './pages/details/product-details.compone
 export const PRODUCTS_ROUTES: Routes = [
     {
         path: '',
-        component: ProductListComponent
+        component: ProductsListComponent
     },
     {
         path: 'new',
