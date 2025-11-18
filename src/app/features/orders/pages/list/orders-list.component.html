@@ -1,0 +1,66 @@
+<div class="container-fluid py-4">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h1 class="h3 mb-1">Órdenes</h1>
+      <p class="text-muted mb-0">Listado de órdenes del sistema</p>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-body">
+      <div class="row mb-3">
+        <div class="col-md-6">
+          <input type="text" class="form-control" placeholder="Buscar por código o cliente..." [value]="searchText()"
+            (input)="onSearchChange($event)" />
+        </div>
+      </div>
+
+      <div class="table-responsive">
+        <table class="table table-hover">
+          <thead>
+            <tr>
+              <th>Código</th>
+              <th>Cliente</th>
+              <th>Fecha</th>
+              <th>Total</th>
+              <th>Estado</th>
+              <th>Tipo de entrega</th>
+              <th class="text-end">Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            @if (orders().length === 0) {
+            <tr>
+              <td colspan="7" class="text-center py-4">
+                <p class="text-muted mb-0">No se encontraron órdenes</p>
+              </td>
+            </tr>
+            }
+            @for (order of orders(); track order.id) {
+            <tr>
+              <td>{{ order.code }}</td>
+              <td>{{ order.customer.firstName }} {{ order.customer.lastName }}</td>
+              <td>{{ formatDate(order.createdAt) }}</td>
+              <td>{{ formatCurrency(order.total) }}</td>
+              <td>
+                <span [class]="getStatusBadgeClass(order.status)">
+                  {{ order.status }}
+                </span>
+              </td>
+              <td>{{ order.deliveryType }}</td>
+              <td class="text-end">
+                <a [routerLink]="['/orders', order.id]" class="btn btn-sm btn-outline-primary me-2">
+                  Ver
+                </a>
+                <button type="button" class="btn btn-sm btn-outline-danger" (click)="deleteOrder(order.id)">
+                  Eliminar
+                </button>
+              </td>
+            </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>

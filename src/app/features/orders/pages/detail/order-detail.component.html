@@ -1,0 +1,210 @@
+<div class="container-fluid py-4">
+  @if (loading()) {
+  <div class="text-center py-5">
+    <div class="spinner-border text-primary" role="status">
+      <span class="visually-hidden">Cargando...</span>
+    </div>
+  </div>
+  } @else if (notFound()) {
+  <div class="alert alert-warning" role="alert">
+    <h4 class="alert-heading">Orden no encontrada</h4>
+    <p>La orden que buscas no existe o ha sido eliminada.</p>
+    <hr>
+    <button type="button" class="btn btn-primary" (click)="goBack()">
+      Volver al listado
+    </button>
+  </div>
+  } @else if (order()) {
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h1 class="h3 mb-1">Detalle de Orden: {{ order()!.code }}</h1>
+      <p class="text-muted mb-0">Información completa de la orden</p>
+    </div>
+    <button type="button" class="btn btn-secondary" (click)="goBack()">
+      Volver
+    </button>
+  </div>
+
+  <!-- Resumen de la orden -->
+  <div class="card mb-4">
+    <div class="card-header bg-primary text-white">
+      <h5 class="mb-0">Resumen de la orden</h5>
+    </div>
+    <div class="card-body">
+      <div class="row">
+        <div class="col-md-6">
+          <p><strong>Código:</strong> {{ order()!.code }}</p>
+          <p>
+            <strong>Estado:</strong>
+            <span [class]="getStatusBadgeClass(order()!.status)">
+              {{ order()!.status }}
+            </span>
+          </p>
+          <p><strong>Tipo de entrega:</strong> {{ order()!.deliveryType }}</p>
+        </div>
+        <div class="col-md-6">
+          <p><strong>Fecha de creación:</strong> {{ formatDate(order()!.createdAt) }}</p>
+          <p><strong>Última actualización:</strong> {{ formatDate(order()!.updatedAt) }}</p>
+        </div>
+      </div>
+      <hr>
+      <div class="row">
+        <div class="col-md-6">
+          <p><strong>Subtotal:</strong> {{ formatCurrency(order()!.subtotal) }}</p>
+          <p><strong>Costo de envío:</strong> {{ formatCurrency(order()!.shippingCost) }}</p>
+          <p><strong>Descuento:</strong> {{ formatCurrency(order()!.discount) }}</p>
+        </div>
+        <div class="col-md-6">
+          <h4><strong>Total:</strong> {{ formatCurrency(order()!.total) }}</h4>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Items de la orden -->
+  <div class="card mb-4">
+    <div class="card-header bg-info text-white">
+      <h5 class="mb-0">Items de la orden</h5>
+    </div>
+    <div class="card-body">
+      <div class="table-responsive">
+        <table class="table table-bordered">
+          <thead class="table-light">
+            <tr>
+              <th>Producto</th>
+              <th class="text-end">Cantidad</th>
+              <th class="text-end">Precio Unitario</th>
+              <th class="text-end">Total</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (item of order()!.items; track item.id) {
+            <tr>
+              <td>{{ item.productName }}</td>
+              <td class="text-end">{{ item.quantity }}</td>
+              <td class="text-end">{{ formatCurrency(item.unitPrice) }}</td>
+              <td class="text-end">{{ formatCurrency(calculateItemTotal(item.unitPrice, item.quantity)) }}</td>
+            </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="row">
+    <!-- Información del cliente -->
+    <div class="col-md-6 mb-4">
+      <div class="card h-100">
+        <div class="card-header bg-success text-white">
+          <h5 class="mb-0">Información del cliente</h5>
+        </div>
+        <div class="card-body">
+          <p><strong>Nombre:</strong> {{ order()!.customer.firstName }} {{ order()!.customer.lastName }}</p>
+          <p><strong>Tipo de documento:</strong> {{ order()!.customer.documentType }}</p>
+          <p><strong>Número de documento:</strong> {{ order()!.customer.documentNumber }}</p>
+          <p><strong>Email:</strong> {{ order()!.customer.email }}</p>
+          <p><strong>Teléfono:</strong> {{ order()!.customer.phoneNumber }}</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Dirección de envío -->
+    <div class="col-md-6 mb-4">
+      <div class="card h-100">
+        <div class="card-header bg-warning text-dark">
+          <h5 class="mb-0">Dirección de envío</h5>
+        </div>
+        <div class="card-body">
+          <p><strong>Departamento:</strong> {{ order()!.shippingAddress.department }}</p>
+          <p><strong>Provincia:</strong> {{ order()!.shippingAddress.province }}</p>
+          <p><strong>Distrito:</strong> {{ order()!.shippingAddress.district }}</p>
+          <p><strong>Dirección:</strong> {{ order()!.shippingAddress.addressLine }}</p>
+          @if (order()!.shippingAddress.reference) {
+          <p><strong>Referencia:</strong> {{ order()!.shippingAddress.reference }}</p>
+          }
+          <p><strong>Teléfono:</strong> {{ order()!.shippingAddress.phone }}</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Pagos -->
+  <div class="card mb-4">
+    <div class="card-header bg-secondary text-white">
+      <h5 class="mb-0">Pagos</h5>
+    </div>
+    <div class="card-body">
+      <div class="table-responsive">
+        <table class="table table-bordered">
+          <thead class="table-light">
+            <tr>
+              <th>Método</th>
+              <th>ID de Transacción</th>
+              <th class="text-end">Monto</th>
+              <th>Estado</th>
+              <th>Fecha de Pago</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (payment of order()!.payments; track payment.id) {
+            <tr>
+              <td>{{ payment.method }}</td>
+              <td>{{ payment.transactionId }}</td>
+              <td class="text-end">{{ formatCurrency(payment.amount) }}</td>
+              <td>
+                <span [class]="getPaymentStatusBadgeClass(payment.status)">
+                  {{ payment.status }}
+                </span>
+              </td>
+              <td>{{ formatDate(payment.paidAt) }}</td>
+            </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Factura -->
+  @if (order()!.invoice) {
+  <div class="card mb-4">
+    <div class="card-header bg-dark text-white">
+      <h5 class="mb-0">Factura</h5>
+    </div>
+    <div class="card-body">
+      <div class="row">
+        <div class="col-md-6">
+          <p><strong>Número:</strong> {{ order()!.invoice!.number }}</p>
+          <p><strong>Serie:</strong> {{ order()!.invoice!.serie }}</p>
+          <p><strong>Tipo:</strong> {{ order()!.invoice!.type }}</p>
+          <p>
+            <strong>Estado:</strong>
+            <span [class]="getInvoiceStatusBadgeClass(order()!.invoice!.status)">
+              {{ order()!.invoice!.status }}
+            </span>
+          </p>
+        </div>
+        <div class="col-md-6">
+          <p><strong>Monto total:</strong> {{ formatCurrency(order()!.invoice!.totalAmount) }}</p>
+          <p><strong>Moneda:</strong> {{ order()!.invoice!.currency }}</p>
+          <p><strong>Fecha de emisión:</strong> {{ formatDate(order()!.invoice!.issuedAt) }}</p>
+          @if (order()!.invoice!.documentUrl) {
+          <p>
+            <strong>Documento:</strong>
+            <a [href]="order()!.invoice!.documentUrl" target="_blank" class="btn btn-sm btn-outline-primary">
+              Descargar PDF
+            </a>
+          </p>
+          }
+        </div>
+      </div>
+    </div>
+  </div>
+  } @else {
+  <div class="alert alert-info" role="alert">
+    <strong>Nota:</strong> Esta orden aún no tiene factura asociada.
+  </div>
+  }
+  }
+</div>

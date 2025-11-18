@@ -1,0 +1,18 @@
+.card-header {
+    font-weight: 600;
+}
+
+.table th {
+    font-weight: 600;
+}
+
+.badge {
+    font-size: 0.875rem;
+    padding: 0.35em 0.65em;
+    font-weight: 500;
+}
+
+.alert-heading {
+    font-size: 1.5rem;
+    margin-bottom: 0.75rem;
+}
