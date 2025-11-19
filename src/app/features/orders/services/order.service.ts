@@ -30,8 +30,8 @@ export class OrderService {
                 shippingCost: 25.00,
                 discount: 50.00,
                 total: 1874.98,
-                createdAt: '2025-01-15T10:30:00Z',
-                updatedAt: '2025-01-16T14:20:00Z',
+                createdAt: '2025-11-15T10:30:00Z',
+                updatedAt: '2025-11-16T14:20:00Z',
                 customer: this.createMockCustomer(1, 'Juan', 'Pérez', 'DNI', '12345678', 'juan.perez@email.com', '+51987654321'),
                 shippingAddress: this.createMockAddress(1, 'Lima', 'Miraflores', 'Lima', 'Av. Larco 1234, Dpto 501', 'Edificio Torre Azul', '+51987654321'),
                 items: [
@@ -46,8 +46,8 @@ export class OrderService {
                         method: 'Tarjeta de crédito',
                         status: 'Pagado',
                         transactionId: 'TXN-20250115-001',
-                        createdAt: '2025-01-15T10:35:00Z',
-                        paidAt: '2025-01-15T10:35:30Z'
+                        createdAt: '2025-11-15T10:35:00Z',
+                        paidAt: '2025-11-15T10:35:30Z'
                     }
                 ],
                 invoice: {
@@ -60,8 +60,8 @@ export class OrderService {
                     hashValue: 'abc123def456',
                     totalAmount: 1874.98,
                     currency: 'PEN',
-                    createdAt: '2025-01-15T10:40:00Z',
-                    issuedAt: '2025-01-15T10:40:00Z'
+                    createdAt: '2025-11-15T10:40:00Z',
+                    issuedAt: '2025-11-15T10:40:00Z'
                 }
             },
             {
@@ -73,8 +73,8 @@ export class OrderService {
                 shippingCost: 0,
                 discount: 0,
                 total: 799.99,
-                createdAt: '2025-01-16T09:15:00Z',
-                updatedAt: '2025-01-16T09:15:00Z',
+                createdAt: '2025-11-16T09:15:00Z',
+                updatedAt: '2025-11-16T09:15:00Z',
                 customer: this.createMockCustomer(2, 'María', 'González', 'DNI', '87654321', 'maria.gonzalez@email.com', '+51912345678'),
                 shippingAddress: this.createMockAddress(2, 'Lima', 'San Isidro', 'Lima', 'Av. Javier Prado 2500', null, '+51912345678'),
                 items: [
@@ -88,7 +88,7 @@ export class OrderService {
                         method: 'Transferencia bancaria',
                         status: 'Pendiente',
                         transactionId: 'TXN-20250116-002',
-                        createdAt: '2025-01-16T09:20:00Z',
+                        createdAt: '2025-11-16T09:20:00Z',
                         paidAt: null
                     }
                 ],
@@ -103,8 +103,8 @@ export class OrderService {
                 shippingCost: 15.00,
                 discount: 10.00,
                 total: 354.99,
-                createdAt: '2025-01-17T14:45:00Z',
-                updatedAt: '2025-01-18T11:30:00Z',
+                createdAt: '2025-11-17T14:45:00Z',
+                updatedAt: '2025-11-18T11:30:00Z',
                 customer: this.createMockCustomer(3, 'Carlos', 'Rodríguez', 'DNI', '45678912', 'carlos.rodriguez@email.com', '+51998765432'),
                 shippingAddress: this.createMockAddress(3, 'Arequipa', 'Cayma', 'Arequipa', 'Calle Los Pinos 456', 'Casa blanca con portón negro', '+51998765432'),
                 items: [
@@ -118,8 +118,8 @@ export class OrderService {
                         method: 'Efectivo contra entrega',
                         status: 'Pagado',
                         transactionId: 'TXN-20250118-003',
-                        createdAt: '2025-01-18T11:30:00Z',
-                        paidAt: '2025-01-18T11:30:00Z'
+                        createdAt: '2025-11-18T11:30:00Z',
+                        paidAt: '2025-11-18T11:30:00Z'
                     }
                 ],
                 invoice: {
@@ -132,8 +132,8 @@ export class OrderService {
                     hashValue: 'xyz789abc123',
                     totalAmount: 354.99,
                     currency: 'PEN',
-                    createdAt: '2025-01-18T11:35:00Z',
-                    issuedAt: '2025-01-18T11:35:00Z'
+                    createdAt: '2025-11-18T11:35:00Z',
+                    issuedAt: '2025-11-18T11:35:00Z'
                 }
             },
             {
@@ -145,8 +145,8 @@ export class OrderService {
                 shippingCost: 20.00,
                 discount: 0,
                 total: 619.99,
-                createdAt: '2025-01-18T16:20:00Z',
-                updatedAt: '2025-01-19T10:00:00Z',
+                createdAt: '2025-11-18T16:20:00Z',
+                updatedAt: '2025-11-19T10:00:00Z',
                 customer: this.createMockCustomer(4, 'Ana', 'Martínez', 'DNI', '78912345', 'ana.martinez@email.com', '+51923456789'),
                 shippingAddress: this.createMockAddress(4, 'Cusco', 'Wanchaq', 'Cusco', 'Jr. Libertadores 789', 'Frente al parque', '+51923456789'),
                 items: [
@@ -160,7 +160,7 @@ export class OrderService {
                         method: 'Tarjeta de débito',
                         status: 'Cancelado',
                         transactionId: 'TXN-20250118-004',
-                        createdAt: '2025-01-18T16:25:00Z',
+                        createdAt: '2025-11-18T16:25:00Z',
                         paidAt: null
                     }
                 ],
@@ -175,8 +175,8 @@ export class OrderService {
                 shippingCost: 0,
                 discount: 5.97,
                 total: 140.00,
-                createdAt: '2025-01-19T11:10:00Z',
-                updatedAt: '2025-01-19T15:30:00Z',
+                createdAt: '2025-11-19T11:10:00Z',
+                updatedAt: '2025-11-19T15:30:00Z',
                 customer: this.createMockCustomer(5, 'Luis', 'Torres', 'CE', 'CE123456', 'luis.torres@email.com', '+51934567890'),
                 shippingAddress: this.createMockAddress(5, 'Lima', 'Surco', 'Lima', 'Av. Primavera 1800', null, '+51934567890'),
                 items: [
@@ -190,8 +190,8 @@ export class OrderService {
                         method: 'Tarjeta de crédito',
                         status: 'Pagado',
                         transactionId: 'TXN-20250119-005A',
-                        createdAt: '2025-01-19T11:15:00Z',
-                        paidAt: '2025-01-19T11:15:20Z'
+                        createdAt: '2025-11-19T11:15:00Z',
+                        paidAt: '2025-11-19T11:15:20Z'
                     },
                     {
                         id: 6,
@@ -200,8 +200,8 @@ export class OrderService {
                         method: 'Tarjeta de crédito',
                         status: 'Pagado',
                         transactionId: 'TXN-20250119-005B',
-                        createdAt: '2025-01-19T11:15:00Z',
-                        paidAt: '2025-01-19T11:15:30Z'
+                        createdAt: '2025-11-19T11:15:00Z',
+                        paidAt: '2025-11-19T11:15:30Z'
                     }
                 ],
                 invoice: {
@@ -214,8 +214,8 @@ export class OrderService {
                     hashValue: 'mno456pqr789',
                     totalAmount: 140.00,
                     currency: 'PEN',
-                    createdAt: '2025-01-19T15:35:00Z',
-                    issuedAt: '2025-01-19T15:35:00Z'
+                    createdAt: '2025-11-19T15:35:00Z',
+                    issuedAt: '2025-11-19T15:35:00Z'
                 }
             },
             {
@@ -227,8 +227,8 @@ export class OrderService {
                 shippingCost: 30.00,
                 discount: 100.00,
                 total: 2129.97,
-                createdAt: '2025-01-20T08:30:00Z',
-                updatedAt: '2025-01-20T08:30:00Z',
+                createdAt: '2025-11-20T08:30:00Z',
+                updatedAt: '2025-11-20T08:30:00Z',
                 customer: this.createMockCustomer(6, 'Patricia', 'Vega', 'DNI', '65412378', 'patricia.vega@email.com', '+51945678901'),
                 shippingAddress: this.createMockAddress(6, 'Trujillo', 'Victor Larco', 'La Libertad', 'Av. Larco 3500', 'Edificio verde, 3er piso', '+51945678901'),
                 items: [
@@ -244,7 +244,7 @@ export class OrderService {
                         method: 'Yape',
                         status: 'Pendiente',
                         transactionId: 'TXN-20250120-006',
-                        createdAt: '2025-01-20T08:35:00Z',
+                        createdAt: '2025-11-20T08:35:00Z',
                         paidAt: null
                     }
                 ],
