@@ -1,0 +1,263 @@
+<div class="container-fluid py-4">
+  <!-- Header -->
+  <div class="mb-4">
+    <h1 class="h3 mb-1">Panel de Control</h1>
+    <p class="text-muted mb-0">Resumen de métricas y actividad reciente</p>
+  </div>
+
+  <!-- KPI Cards -->
+  <div class="row g-3 mb-4">
+    <div class="col-12 col-sm-6 col-lg-4 col-xl-2">
+      <div class="card kpi-card kpi-primary">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-start">
+            <div>
+              <p class="text-muted mb-1 small">Total de órdenes</p>
+              <h3 class="mb-0">{{ totalOrders() }}</h3>
+            </div>
+            <div class="kpi-icon">
+              <i class="bi bi-cart-check"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-12 col-sm-6 col-lg-4 col-xl-2">
+      <div class="card kpi-card kpi-success">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-start">
+            <div>
+              <p class="text-muted mb-1 small">Órdenes completadas</p>
+              <h3 class="mb-0">{{ completedOrders() }}</h3>
+            </div>
+            <div class="kpi-icon">
+              <i class="bi bi-check-circle"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-12 col-sm-6 col-lg-4 col-xl-2">
+      <div class="card kpi-card kpi-warning">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-start">
+            <div>
+              <p class="text-muted mb-1 small">Órdenes pendientes</p>
+              <h3 class="mb-0">{{ pendingOrders() }}</h3>
+            </div>
+            <div class="kpi-icon">
+              <i class="bi bi-clock-history"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-12 col-sm-6 col-lg-4 col-xl-2">
+      <div class="card kpi-card kpi-info">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-start">
+            <div>
+              <p class="text-muted mb-1 small">Ingresos totales</p>
+              <h3 class="mb-0 small-text">{{ formatCurrency(totalRevenue()) }}</h3>
+            </div>
+            <div class="kpi-icon">
+              <i class="bi bi-currency-dollar"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-12 col-sm-6 col-lg-4 col-xl-2">
+      <div class="card kpi-card kpi-purple">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-start">
+            <div>
+              <p class="text-muted mb-1 small">Total de clientes</p>
+              <h3 class="mb-0">{{ totalCustomers() }}</h3>
+            </div>
+            <div class="kpi-icon">
+              <i class="bi bi-people"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-12 col-sm-6 col-lg-4 col-xl-2">
+      <div class="card kpi-card kpi-teal">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-start">
+            <div>
+              <p class="text-muted mb-1 small">Total de productos</p>
+              <h3 class="mb-0">{{ totalProducts() }}</h3>
+            </div>
+            <div class="kpi-icon">
+              <i class="bi bi-box-seam"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Sales Chart -->
+  <div class="row mb-4">
+    <div class="col-12">
+      <div class="card">
+        <div class="card-header bg-white">
+          <h5 class="mb-0">
+            <i class="bi bi-bar-chart-line me-2"></i>
+            Ventas de los 14 últimos días
+          </h5>
+        </div>
+        <div class="card-body">
+          <div class="chart-container">
+            <svg class="chart-svg" viewBox="0 0 800 300" preserveAspectRatio="xMidYMid meet">
+              <!-- Y-axis labels -->
+              <text x="10" y="20" class="chart-label">{{ formatCurrency(maxChartValue()) }}</text>
+              <text x="10" y="150" class="chart-label">{{ formatCurrency(maxChartValue() / 2) }}</text>
+              <text x="10" y="280" class="chart-label">S/ 0</text>
+
+              <!-- Grid lines -->
+              <line x1="60" y1="30" x2="780" y2="30" class="grid-line" />
+              <line x1="60" y1="155" x2="780" y2="155" class="grid-line" />
+              <line x1="60" y1="280" x2="780" y2="280" class="grid-line" />
+
+              <!-- Bars -->
+              <g transform="translate(60, 0)">
+                @for (point of chartData(); track $index) {
+                @let barHeight = maxChartValue() > 0 ? (point.value / maxChartValue()) * 250 : 0;
+                @let barX = $index * 51.5;
+                @let barY = 280 - barHeight;
+
+                <g>
+                  <rect [attr.x]="barX" [attr.y]="barY" width="40" [attr.height]="barHeight" class="chart-bar"
+                    [attr.rx]="3">
+                    <title>{{ point.label }}: {{ formatCurrency(point.value) }}</title>
+                  </rect>
+                  <text [attr.x]="barX + 20" y="295" class="chart-x-label" text-anchor="middle">
+                    {{ point.label }}
+                  </text>
+                </g>
+                }
+              </g>
+            </svg>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Latest Orders and Top Products -->
+  <div class="row g-4">
+    <!-- Latest Orders -->
+    <div class="col-12 col-xl-7">
+      <div class="card">
+        <div class="card-header bg-white d-flex justify-content-between align-items-center">
+          <h5 class="mb-0">
+            <i class="bi bi-receipt me-2"></i>
+            Últimas órdenes
+          </h5>
+          <a routerLink="/orders" class="btn btn-sm btn-outline-primary">
+            Ver todas
+          </a>
+        </div>
+        <div class="card-body p-0">
+          @if (latestOrders().length > 0) {
+          <div class="table-responsive">
+            <table class="table table-hover mb-0">
+              <thead class="table-light">
+                <tr>
+                  <th>Código</th>
+                  <th>Cliente</th>
+                  <th>Total</th>
+                  <th>Fecha</th>
+                  <th>Estado</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (order of latestOrders(); track order.id) {
+                <tr>
+                  <td>
+                    <a routerLink="/orders/{{ order.id }}" class="text-decoration-none">
+                      {{ order.code }}
+                    </a>
+                  </td>
+                  <td>{{ order.customer.firstName }} {{ order.customer.lastName }}</td>
+                  <td class="fw-semibold">{{ formatCurrency(order.total) }}</td>
+                  <td class="text-muted small">{{ formatDate(order.createdAt) }}</td>
+                  <td>
+                    <span [class]="getStatusClass(order.status)">
+                      {{ order.status }}
+                    </span>
+                  </td>
+                </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+          } @else {
+          <div class="text-center py-5 text-muted">
+            <i class="bi bi-inbox display-4 d-block mb-3"></i>
+            <p class="mb-0">No hay órdenes registradas</p>
+          </div>
+          }
+        </div>
+      </div>
+    </div>
+
+    <!-- Top Selling Products -->
+    <div class="col-12 col-xl-5">
+      <div class="card">
+        <div class="card-header bg-white d-flex justify-content-between align-items-center">
+          <h5 class="mb-0">
+            <i class="bi bi-graph-up-arrow me-2"></i>
+            Productos más vendidos
+          </h5>
+          <a routerLink="/products" class="btn btn-sm btn-outline-primary">
+            Ver todos
+          </a>
+        </div>
+        <div class="card-body p-0">
+          @if (topProducts().length > 0) {
+          <div class="table-responsive">
+            <table class="table table-hover mb-0">
+              <thead class="table-light">
+                <tr>
+                  <th>Producto</th>
+                  <th class="text-center">Cantidad</th>
+                  <th class="text-end">Ingresos</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (product of topProducts(); track product.id) {
+                <tr>
+                  <td>
+                    <a routerLink="/products/{{ product.id }}" class="text-decoration-none">
+                      {{ product.name }}
+                    </a>
+                  </td>
+                  <td class="text-center">
+                    <span class="badge bg-primary rounded-pill">{{ product.quantitySold }}</span>
+                  </td>
+                  <td class="text-end fw-semibold">{{ formatCurrency(product.totalRevenue) }}</td>
+                </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+          } @else {
+          <div class="text-center py-5 text-muted">
+            <i class="bi bi-box display-4 d-block mb-3"></i>
+            <p class="mb-0">No hay ventas registradas</p>
+          </div>
+          }
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

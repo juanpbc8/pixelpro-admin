@@ -8,7 +8,7 @@ export const routes: Routes = [
         children: [
             {
                 path: 'dashboard',
-                loadComponent: () => import('./features/dashboard/pages/overview/overview.component').then(m => m.OverviewComponent)
+                loadChildren: () => import('./features/dashboard/dashboard.routes').then(m => m.DASHBOARD_ROUTES)
             },
             {
                 path: 'products',

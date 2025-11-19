@@ -1,0 +1,218 @@
+/* KPI Cards */
+.kpi-card {
+    border: none;
+    border-radius: 8px;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    height: 100%;
+}
+
+.kpi-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.kpi-card .card-body {
+    padding: 1.25rem;
+}
+
+.kpi-icon {
+    width: 48px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    font-size: 1.5rem;
+}
+
+.kpi-primary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+}
+
+.kpi-primary .text-muted {
+    color: rgba(255, 255, 255, 0.8) !important;
+}
+
+.kpi-primary .kpi-icon {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.kpi-success {
+    background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+    color: white;
+}
+
+.kpi-success .text-muted {
+    color: rgba(255, 255, 255, 0.8) !important;
+}
+
+.kpi-success .kpi-icon {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.kpi-warning {
+    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    color: white;
+}
+
+.kpi-warning .text-muted {
+    color: rgba(255, 255, 255, 0.8) !important;
+}
+
+.kpi-warning .kpi-icon {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.kpi-info {
+    background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+    color: white;
+}
+
+.kpi-info .text-muted {
+    color: rgba(255, 255, 255, 0.8) !important;
+}
+
+.kpi-info .kpi-icon {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.kpi-purple {
+    background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+    color: #333;
+}
+
+.kpi-purple .kpi-icon {
+    background: rgba(0, 0, 0, 0.1);
+}
+
+.kpi-teal {
+    background: linear-gradient(135deg, #d299c2 0%, #fef9d7 100%);
+    color: #333;
+}
+
+.kpi-teal .kpi-icon {
+    background: rgba(0, 0, 0, 0.1);
+}
+
+.kpi-card h3 {
+    font-size: 2rem;
+    font-weight: 700;
+}
+
+.kpi-card h3.small-text {
+    font-size: 1.5rem;
+}
+
+.kpi-card .small {
+    font-size: 0.8rem;
+    font-weight: 500;
+}
+
+/* Chart styles */
+.chart-container {
+    width: 100%;
+    min-height: 300px;
+}
+
+.chart-svg {
+    width: 100%;
+    height: auto;
+}
+
+.chart-bar {
+    fill: #667eea;
+    transition: fill 0.2s ease;
+    cursor: pointer;
+}
+
+.chart-bar:hover {
+    fill: #764ba2;
+}
+
+.chart-label {
+    font-size: 12px;
+    fill: #666;
+    font-family: system-ui, -apple-system, sans-serif;
+}
+
+.chart-x-label {
+    font-size: 11px;
+    fill: #999;
+    font-family: system-ui, -apple-system, sans-serif;
+}
+
+.grid-line {
+    stroke: #e0e0e0;
+    stroke-width: 1;
+    stroke-dasharray: 4, 4;
+}
+
+/* Card header */
+.card-header {
+    border-bottom: 1px solid #e9ecef;
+    padding: 1rem 1.25rem;
+}
+
+.card-header h5 {
+    font-size: 1rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+}
+
+/* Table styles */
+.table th {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #495057;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.table td {
+    vertical-align: middle;
+    font-size: 0.9rem;
+}
+
+.table-hover tbody tr:hover {
+    background-color: #f8f9fa;
+}
+
+/* Empty state */
+.text-muted i.display-4 {
+    opacity: 0.3;
+}
+
+/* Badge customization */
+.badge {
+    font-weight: 500;
+    padding: 0.35em 0.65em;
+}
+
+/* Responsive adjustments */
+@media (max-width: 1399px) {
+    .kpi-card h3 {
+        font-size: 1.75rem;
+    }
+
+    .kpi-card h3.small-text {
+        font-size: 1.25rem;
+    }
+}
+
+@media (max-width: 767px) {
+    .kpi-card h3 {
+        font-size: 1.5rem;
+    }
+
+    .kpi-card h3.small-text {
+        font-size: 1.15rem;
+    }
+
+    .kpi-icon {
+        width: 40px;
+        height: 40px;
+        font-size: 1.25rem;
+    }
+}
