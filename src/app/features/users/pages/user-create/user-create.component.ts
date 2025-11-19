@@ -74,7 +74,7 @@ export class UserCreateComponent implements OnInit {
 
     getErrorMessage(fieldName: string): string {
         const control = this.userForm.get(fieldName);
-        
+
         if (!control || !control.touched || !control.errors) {
             return '';
         }
@@ -98,7 +98,7 @@ export class UserCreateComponent implements OnInit {
     }
 
     getPasswordMismatchError(): string {
-        if (this.userForm.errors?.['passwordMismatch'] && 
+        if (this.userForm.errors?.['passwordMismatch'] &&
             this.userForm.get('confirmPassword')?.touched) {
             return 'Las contraseñas no coinciden.';
         }

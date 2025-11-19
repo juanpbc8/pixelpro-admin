@@ -106,8 +106,7 @@
             <!-- Confirm New Password -->
             <div class="mb-3">
               <label for="confirmNewPassword" class="form-label">Confirmar contraseña</label>
-              <input type="password" class="form-control" id="confirmNewPassword"
-                formControlName="confirmNewPassword"
+              <input type="password" class="form-control" id="confirmNewPassword" formControlName="confirmNewPassword"
                 [class.is-invalid]="(passwordForm.get('confirmNewPassword')?.invalid && passwordForm.get('confirmNewPassword')?.touched) || getPasswordMismatchError()"
                 placeholder="Repita la contraseña" />
               @if (getErrorMessage('confirmNewPassword', passwordForm)) {

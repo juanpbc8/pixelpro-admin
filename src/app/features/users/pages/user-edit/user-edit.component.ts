@@ -72,7 +72,7 @@ export class UserEditComponent implements OnInit {
 
     private updateFormsWithUserData(): void {
         const currentUser = this.user();
-        
+
         if (!currentUser || !this.userForm) return;
 
         this.userForm.patchValue({
@@ -144,7 +144,7 @@ export class UserEditComponent implements OnInit {
 
     getErrorMessage(fieldName: string, form: FormGroup): string {
         const control = form.get(fieldName);
-        
+
         if (!control || !control.touched || !control.errors) {
             return '';
         }
@@ -163,7 +163,7 @@ export class UserEditComponent implements OnInit {
     }
 
     getPasswordMismatchError(): string {
-        if (this.passwordForm?.errors?.['passwordMismatch'] && 
+        if (this.passwordForm?.errors?.['passwordMismatch'] &&
             this.passwordForm.get('confirmNewPassword')?.touched) {
             return 'Las contraseñas no coinciden.';
         }

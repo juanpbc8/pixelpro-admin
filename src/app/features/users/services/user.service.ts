@@ -133,7 +133,7 @@ export class UserService {
 
     createUser(email: string, password: string, roleId: number): Observable<User> {
         const role = this.roles().find(r => r.id === roleId);
-        
+
         if (!role) {
             throw new Error('Role not found');
         }
@@ -148,15 +148,15 @@ export class UserService {
         };
 
         this.users.update(users => [...users, newUser]);
-        
+
         console.log('User created with password:', password);
-        
+
         return of(newUser).pipe(delay(300));
     }
 
     updateUser(id: number, changes: { enabled?: boolean; roleId?: number }): Observable<User | undefined> {
         const index = this.users().findIndex(u => u.id === id);
-        
+
         if (index === -1) {
             return of(undefined).pipe(delay(300));
         }
