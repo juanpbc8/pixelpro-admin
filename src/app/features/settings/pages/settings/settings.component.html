@@ -1,0 +1,229 @@
+<div class="container-fluid py-4">
+  <div class="row justify-content-center">
+    <div class="col-12" style="max-width: 700px;">
+      <div class="mb-4">
+        <h1 class="h3 mb-1">Configuración</h1>
+        <p class="text-muted mb-0">Gestión de parámetros del sistema</p>
+      </div>
+
+      @if (successMessage()) {
+      <div class="alert alert-success alert-dismissible fade show" role="alert">
+        <i class="bi bi-check-circle-fill me-2"></i>
+        Configuración actualizada correctamente (simulado).
+        <button type="button" class="btn-close" (click)="successMessage.set(false)"></button>
+      </div>
+      }
+
+      <form [formGroup]="settingsForm" (ngSubmit)="onSubmit()">
+        <!-- Card 1: Información del sistema -->
+        <div class="card mb-4">
+          <div class="card-header bg-primary text-white">
+            <h5 class="mb-0">
+              <i class="bi bi-info-circle me-2"></i>
+              Información del sistema
+            </h5>
+          </div>
+          <div class="card-body">
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <label for="systemName" class="form-label">Nombre del sistema</label>
+                <input type="text" class="form-control" id="systemName" formControlName="systemName"
+                  [class.is-invalid]="settingsForm.get('systemName')?.invalid && settingsForm.get('systemName')?.touched" />
+                @if (getErrorMessage('systemName')) {
+                <div class="invalid-feedback d-block">
+                  {{ getErrorMessage('systemName') }}
+                </div>
+                }
+              </div>
+
+              <div class="col-md-6 mb-3">
+                <label for="version" class="form-label">Versión</label>
+                <input type="text" class="form-control" id="version" formControlName="version"
+                  [class.is-invalid]="settingsForm.get('version')?.invalid && settingsForm.get('version')?.touched" />
+                @if (getErrorMessage('version')) {
+                <div class="invalid-feedback d-block">
+                  {{ getErrorMessage('version') }}
+                </div>
+                }
+              </div>
+            </div>
+
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <label for="country" class="form-label">País</label>
+                <input type="text" class="form-control" id="country" formControlName="country"
+                  [class.is-invalid]="settingsForm.get('country')?.invalid && settingsForm.get('country')?.touched" />
+                @if (getErrorMessage('country')) {
+                <div class="invalid-feedback d-block">
+                  {{ getErrorMessage('country') }}
+                </div>
+                }
+              </div>
+
+              <div class="col-md-6 mb-3">
+                <label for="currency" class="form-label">Moneda</label>
+                <input type="text" class="form-control" id="currency" formControlName="currency"
+                  [class.is-invalid]="settingsForm.get('currency')?.invalid && settingsForm.get('currency')?.touched" />
+                @if (getErrorMessage('currency')) {
+                <div class="invalid-feedback d-block">
+                  {{ getErrorMessage('currency') }}
+                </div>
+                }
+              </div>
+            </div>
+
+            <div class="row">
+              <div class="col-md-4 mb-3">
+                <label for="timezone" class="form-label">Zona horaria</label>
+                <input type="text" class="form-control" id="timezone" formControlName="timezone"
+                  [class.is-invalid]="settingsForm.get('timezone')?.invalid && settingsForm.get('timezone')?.touched" />
+                @if (getErrorMessage('timezone')) {
+                <div class="invalid-feedback d-block">
+                  {{ getErrorMessage('timezone') }}
+                </div>
+                }
+              </div>
+
+              <div class="col-md-4 mb-3">
+                <label for="dateFormat" class="form-label">Formato de fecha</label>
+                <input type="text" class="form-control" id="dateFormat" formControlName="dateFormat"
+                  [class.is-invalid]="settingsForm.get('dateFormat')?.invalid && settingsForm.get('dateFormat')?.touched" />
+                @if (getErrorMessage('dateFormat')) {
+                <div class="invalid-feedback d-block">
+                  {{ getErrorMessage('dateFormat') }}
+                </div>
+                }
+              </div>
+
+              <div class="col-md-4 mb-3">
+                <label for="timeFormat" class="form-label">Formato de hora</label>
+                <input type="text" class="form-control" id="timeFormat" formControlName="timeFormat"
+                  [class.is-invalid]="settingsForm.get('timeFormat')?.invalid && settingsForm.get('timeFormat')?.touched" />
+                @if (getErrorMessage('timeFormat')) {
+                <div class="invalid-feedback d-block">
+                  {{ getErrorMessage('timeFormat') }}
+                </div>
+                }
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Card 2: Parámetros comerciales -->
+        <div class="card mb-4">
+          <div class="card-header bg-success text-white">
+            <h5 class="mb-0">
+              <i class="bi bi-shop me-2"></i>
+              Parámetros comerciales
+            </h5>
+          </div>
+          <div class="card-body">
+            <div class="row">
+              <div class="col-md-4 mb-3">
+                <label for="taxIgv" class="form-label">IGV (%)</label>
+                <input type="number" class="form-control" id="taxIgv" formControlName="taxIgv" min="0" max="100"
+                  step="0.01"
+                  [class.is-invalid]="settingsForm.get('taxIgv')?.invalid && settingsForm.get('taxIgv')?.touched" />
+                @if (getErrorMessage('taxIgv')) {
+                <div class="invalid-feedback d-block">
+                  {{ getErrorMessage('taxIgv') }}
+                </div>
+                }
+              </div>
+
+              <div class="col-md-4 mb-3">
+                <label for="defaultShippingCost" class="form-label">Costo de envío (S/.)</label>
+                <input type="number" class="form-control" id="defaultShippingCost" formControlName="defaultShippingCost"
+                  min="0" step="0.01"
+                  [class.is-invalid]="settingsForm.get('defaultShippingCost')?.invalid && settingsForm.get('defaultShippingCost')?.touched" />
+                @if (getErrorMessage('defaultShippingCost')) {
+                <div class="invalid-feedback d-block">
+                  {{ getErrorMessage('defaultShippingCost') }}
+                </div>
+                }
+              </div>
+
+              <div class="col-md-4 mb-3">
+                <label for="defaultDeliveryType" class="form-label">Tipo de entrega</label>
+                <select class="form-select" id="defaultDeliveryType" formControlName="defaultDeliveryType"
+                  [class.is-invalid]="settingsForm.get('defaultDeliveryType')?.invalid && settingsForm.get('defaultDeliveryType')?.touched">
+                  <option value="">Seleccione...</option>
+                  @for (option of deliveryTypeOptions; track option) {
+                  <option [value]="option">{{ option }}</option>
+                  }
+                </select>
+                @if (getErrorMessage('defaultDeliveryType')) {
+                <div class="invalid-feedback d-block">
+                  {{ getErrorMessage('defaultDeliveryType') }}
+                </div>
+                }
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Card 3: Seguridad -->
+        <div class="card mb-4">
+          <div class="card-header bg-warning text-dark">
+            <h5 class="mb-0">
+              <i class="bi bi-shield-lock me-2"></i>
+              Seguridad
+            </h5>
+          </div>
+          <div class="card-body">
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <label for="passwordMinLength" class="form-label">Longitud mínima de contraseña</label>
+                <input type="number" class="form-control" id="passwordMinLength" formControlName="passwordMinLength"
+                  min="4" max="32"
+                  [class.is-invalid]="settingsForm.get('passwordMinLength')?.invalid && settingsForm.get('passwordMinLength')?.touched" />
+                @if (getErrorMessage('passwordMinLength')) {
+                <div class="invalid-feedback d-block">
+                  {{ getErrorMessage('passwordMinLength') }}
+                </div>
+                }
+              </div>
+
+              <div class="col-md-6 mb-3">
+                <label for="loginMaxAttempts" class="form-label">Intentos máximos de login</label>
+                <input type="number" class="form-control" id="loginMaxAttempts" formControlName="loginMaxAttempts"
+                  min="1" max="10"
+                  [class.is-invalid]="settingsForm.get('loginMaxAttempts')?.invalid && settingsForm.get('loginMaxAttempts')?.touched" />
+                @if (getErrorMessage('loginMaxAttempts')) {
+                <div class="invalid-feedback d-block">
+                  {{ getErrorMessage('loginMaxAttempts') }}
+                </div>
+                }
+              </div>
+            </div>
+
+            <div class="mb-3">
+              <div class="form-check">
+                <input class="form-check-input" type="checkbox" id="passwordResetEnabled"
+                  formControlName="passwordResetEnabled" />
+                <label class="form-check-label" for="passwordResetEnabled">
+                  Habilitar reset de contraseña
+                </label>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Botones de acción -->
+        <div class="d-flex gap-2 justify-content-end">
+          <button type="button" class="btn btn-outline-secondary" (click)="onResetToDefaults()" [disabled]="loading()">
+            <i class="bi bi-arrow-counterclockwise me-2"></i>
+            Restablecer valores
+          </button>
+          <button type="submit" class="btn btn-primary" [disabled]="loading()">
+            @if (loading()) {
+            <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+            }
+            <i class="bi bi-check-lg me-2"></i>
+            Guardar cambios
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
