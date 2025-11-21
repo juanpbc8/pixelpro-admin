@@ -1,10 +1,13 @@
 import { Component, ChangeDetectionStrategy, signal, OnInit, inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
-import { FormBuilder, FormGroup, FormArray, ReactiveFormsModule, Validators } from '@angular/forms';
-import { Product } from '../../models/product.model';
-import { Category } from '../../models/category.model';
+import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { HttpErrorResponse } from '@angular/common/http';
+import { Category } from '../../../categories/models/category.model';
+import { CreateProductDto } from '../../models/product.model';
 import { ProductService } from '../../services/product.service';
+import { CategoryService } from '../../../categories/services/category.service';
+import { UploadService } from '../../../../common/services/upload.service';
 
 @Component({
     selector: 'app-product-create',
@@ -15,11 +18,17 @@ import { ProductService } from '../../services/product.service';
 })
 export class ProductCreateComponent implements OnInit {
     private readonly productService = inject(ProductService);
+    private readonly categoryService = inject(CategoryService);
+    private readonly uploadService = inject(UploadService);
     private readonly router = inject(Router);
     private readonly fb = inject(FormBuilder);
 
     readonly categories = signal<Category[]>([]);
     readonly isSubmitting = signal<boolean>(false);
+    readonly errorMessage = signal<string>('');
+    readonly selectedFile = signal<File | null>(null);
+    readonly imagePreview = signal<string | null>(null);
+    readonly isUploading = signal<boolean>(false);
     readonly productForm: FormGroup;
 
     constructor() {
@@ -30,9 +39,8 @@ export class ProductCreateComponent implements OnInit {
             description: [''],
             price: [0, [Validators.required, Validators.min(0)]],
             qtyStock: [0, [Validators.required, Validators.min(0)]],
-            imageUrl: [''],
             status: ['ACTIVE', Validators.required],
-            categoryIds: [[]]
+            categoryId: [null, Validators.required]
         });
     }
 
@@ -41,34 +49,37 @@ export class ProductCreateComponent implements OnInit {
     }
 
     loadCategories(): void {
-        this.productService.getCategories().subscribe({
+        this.categoryService.getCategories().subscribe({
             next: (categories) => {
                 this.categories.set(categories);
             },
-            error: (error) => {
-                console.error('Error loading categories:', error);
+            error: (err: HttpErrorResponse) => {
+                console.error('Error loading categories:', err);
+                this.errorMessage.set(err.error?.message || 'Error al cargar categorías');
             }
         });
     }
 
-    onCategoryChange(event: Event, categoryId: number): void {
-        const checkbox = event.target as HTMLInputElement;
-        const currentIds = this.productForm.get('categoryIds')?.value || [];
 
-        if (checkbox.checked) {
-            this.productForm.patchValue({
-                categoryIds: [...currentIds, categoryId]
-            });
-        } else {
-            this.productForm.patchValue({
-                categoryIds: currentIds.filter((id: number) => id !== categoryId)
-            });
+
+    onImageSelected(event: Event): void {
+        const input = event.target as HTMLInputElement;
+        if (input.files && input.files.length > 0) {
+            const file = input.files[0];
+            this.selectedFile.set(file);
+
+            // Generar preview local
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                this.imagePreview.set(e.target?.result as string);
+            };
+            reader.readAsDataURL(file);
         }
     }
 
-    isCategorySelected(categoryId: number): boolean {
-        const currentIds = this.productForm.get('categoryIds')?.value || [];
-        return currentIds.includes(categoryId);
+    removeImage(): void {
+        this.selectedFile.set(null);
+        this.imagePreview.set(null);
     }
 
     onSubmit(): void {
@@ -77,34 +88,47 @@ export class ProductCreateComponent implements OnInit {
             return;
         }
 
-        this.isSubmitting.set(true);
+        const file = this.selectedFile();
+        if (!file) {
+            this.errorMessage.set('Debe seleccionar una imagen para el producto');
+            return;
+        }
 
         const formValue = this.productForm.value;
-        const selectedCategoryIds: number[] = formValue.categoryIds || [];
-        const selectedCategories = this.categories().filter(c =>
-            c.id && selectedCategoryIds.includes(c.id)
-        );
+        const categoryId: number = formValue.categoryId;
 
-        const product: Product = {
+        if (!categoryId) {
+            this.errorMessage.set('Debe seleccionar una categoría');
+            return;
+        }
+
+        this.isSubmitting.set(true);
+        this.isUploading.set(true);
+        this.errorMessage.set('');
+
+        const dto: CreateProductDto = {
             sku: formValue.sku,
             name: formValue.name,
-            model: formValue.model || null,
-            description: formValue.description || null,
+            model: formValue.model || undefined,
+            description: formValue.description || undefined,
             price: formValue.price,
             qtyStock: formValue.qtyStock,
-            imageUrl: formValue.imageUrl || null,
             status: formValue.status,
-            categories: selectedCategories
+            categoryId: categoryId
         };
 
-        this.productService.createProduct(product).subscribe({
+        // Usar el método del servicio que orquesta upload + create
+        this.productService.createProductWithImage(dto, file).subscribe({
             next: () => {
                 this.isSubmitting.set(false);
+                this.isUploading.set(false);
                 this.router.navigate(['/products']);
             },
-            error: (error) => {
-                console.error('Error creating product:', error);
+            error: (err: HttpErrorResponse) => {
+                console.error('Error creating product:', err);
+                this.errorMessage.set(err.error?.message || 'Error al crear el producto');
                 this.isSubmitting.set(false);
+                this.isUploading.set(false);
             }
         });
     }

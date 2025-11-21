@@ -89,14 +89,33 @@
                 </select>
               </div>
 
-              <!-- URL de imagen -->
+              <!-- Imagen del producto -->
               <div class="col-12">
-                <label for="imageUrl" class="form-label">URL de imagen</label>
-                <input type="text" class="form-control" id="imageUrl" formControlName="imageUrl"
-                  placeholder="https://ejemplo.com/imagen.jpg">
-                <small class="text-muted">
-                  URL completa de la imagen del producto
-                </small>
+                <label class="form-label">
+                  Imagen del producto <span class="text-danger">*</span>
+                </label>
+
+                @if (imagePreview()) {
+                <div class="mb-3">
+                  <img [src]="imagePreview()!" alt="Vista previa" class="preview-img">
+                  <button type="button" class="btn btn-sm btn-outline-danger ms-3" (click)="removeImage()">
+                    <i class="bi bi-trash"></i> Eliminar
+                  </button>
+                </div>
+                } @else {
+                <div class="mb-2">
+                  <input type="file" class="form-control" accept="image/*" (change)="onImageSelected($event)">
+                  <small class="text-muted">
+                    Formatos soportados: JPG, PNG, WebP. Tamaño máximo: 5MB
+                  </small>
+                </div>
+                }
+
+                @if (errorMessage() && !selectedFile()) {
+                <div class="text-danger small mt-1">
+                  <i class="bi bi-exclamation-circle"></i> Debe seleccionar una imagen
+                </div>
+                }
               </div>
 
               <!-- Descripción -->
@@ -106,33 +125,33 @@
                   placeholder="Descripción detallada del producto"></textarea>
               </div>
 
-              <!-- Categorías -->
+              <!-- Categoría -->
               <div class="col-12">
-                <label class="form-label">Categorías</label>
-                <div class="border rounded p-3 bg-light">
-                  @if (categories().length === 0) {
-                  <p class="text-muted mb-0">
-                    <small>Cargando categorías...</small>
-                  </p>
-                  } @else {
-                  <div class="row g-2">
-                    @for (category of categories(); track category.id) {
-                    <div class="col-md-6">
-                      <div class="form-check">
-                        <input class="form-check-input" type="checkbox" [id]="'category-' + category.id"
-                          [checked]="isCategorySelected(category.id!)"
-                          (change)="onCategoryChange($event, category.id!)">
-                        <label class="form-check-label" [for]="'category-' + category.id">
-                          {{ category.name }}
-                        </label>
-                      </div>
-                    </div>
-                    }
-                  </div>
+                <label for="categoryId" class="form-label">
+                  Categoría <span class="text-danger">*</span>
+                </label>
+                <select class="form-select" id="categoryId" formControlName="categoryId"
+                  [class.is-invalid]="isFieldInvalid('categoryId')">
+                  <option [ngValue]="null">Seleccione una categoría</option>
+                  @for (category of categories(); track category.id) {
+                  <option [ngValue]="category.id">{{ category.name }}</option>
                   }
+                </select>
+                @if (isFieldInvalid('categoryId')) {
+                <div class="invalid-feedback">
+                  {{ getFieldError('categoryId') }}
                 </div>
+                }
               </div>
             </div>
+
+            <!-- Mensaje de error global -->
+            @if (errorMessage()) {
+            <div class="alert alert-danger mt-3" role="alert">
+              <i class="bi bi-exclamation-triangle-fill me-2"></i>
+              {{ errorMessage() }}
+            </div>
+            }
 
             <!-- Botones de acción -->
             <div class="d-flex justify-content-end gap-2 mt-4 pt-3 border-top">
@@ -142,7 +161,11 @@
               <button type="submit" class="btn btn-primary" [disabled]="isSubmitting()">
                 @if (isSubmitting()) {
                 <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                @if (isUploading()) {
+                Subiendo imagen...
+                } @else {
                 Guardando...
+                }
                 } @else {
                 <i class="bi bi-save me-2"></i>
                 Guardar producto

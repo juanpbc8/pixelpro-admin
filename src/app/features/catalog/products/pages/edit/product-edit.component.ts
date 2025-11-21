@@ -2,19 +2,25 @@ import { Component, ChangeDetectionStrategy, signal, OnInit, inject } from '@ang
 import { Router, ActivatedRoute } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { Product } from '../../models/product.model';
-import { Category } from '../../models/category.model';
+import { HttpErrorResponse } from '@angular/common/http';
+import { Product, UpdateProductDto } from '../../models/product.model';
+import { Category } from '../../../categories/models/category.model';
 import { ProductService } from '../../services/product.service';
+import { CategoryService } from '../../../categories/services/category.service';
+import { UploadService } from '../../../../common/services/upload.service';
+import { ImageUrlPipe } from '../../../../../shared/pipes/image-url.pipe';
 
 @Component({
     selector: 'app-product-edit',
-    imports: [CommonModule, ReactiveFormsModule],
+    imports: [CommonModule, ReactiveFormsModule, ImageUrlPipe],
     templateUrl: './product-edit.component.html',
     styleUrl: './product-edit.component.css',
     changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class ProductEditComponent implements OnInit {
     private readonly productService = inject(ProductService);
+    private readonly categoryService = inject(CategoryService);
+    private readonly uploadService = inject(UploadService);
     private readonly router = inject(Router);
     private readonly route = inject(ActivatedRoute);
     private readonly fb = inject(FormBuilder);
@@ -24,6 +30,11 @@ export class ProductEditComponent implements OnInit {
     readonly isLoading = signal<boolean>(true);
     readonly isSubmitting = signal<boolean>(false);
     readonly notFound = signal<boolean>(false);
+    readonly errorMessage = signal<string>('');
+    readonly selectedFile = signal<File | null>(null);
+    readonly imagePreview = signal<string | null>(null);
+    readonly originalImageUrl = signal<string | null>(null);
+    readonly isUploading = signal<boolean>(false);
     readonly productForm: FormGroup;
 
     private productId: number = 0;
@@ -36,9 +47,8 @@ export class ProductEditComponent implements OnInit {
             description: [''],
             price: [0, [Validators.required, Validators.min(0)]],
             qtyStock: [0, [Validators.required, Validators.min(0)]],
-            imageUrl: [''],
             status: ['ACTIVE', Validators.required],
-            categoryIds: [[]]
+            categoryId: [null, Validators.required]
         });
     }
 
@@ -56,17 +66,14 @@ export class ProductEditComponent implements OnInit {
         this.isLoading.set(true);
         this.productService.getProductById(this.productId).subscribe({
             next: (product) => {
-                if (product) {
-                    this.product.set(product);
-                    this.patchForm(product);
-                    this.notFound.set(false);
-                } else {
-                    this.notFound.set(true);
-                }
+                this.product.set(product);
+                this.patchForm(product);
+                this.notFound.set(false);
                 this.isLoading.set(false);
             },
-            error: (error) => {
-                console.error('Error loading product:', error);
+            error: (err: HttpErrorResponse) => {
+                console.error('Error loading product:', err);
+                this.errorMessage.set(err.error?.message || 'Error al cargar el producto');
                 this.notFound.set(true);
                 this.isLoading.set(false);
             }
@@ -74,12 +81,13 @@ export class ProductEditComponent implements OnInit {
     }
 
     loadCategories(): void {
-        this.productService.getCategories().subscribe({
+        this.categoryService.getCategories().subscribe({
             next: (categories) => {
                 this.categories.set(categories);
             },
-            error: (error) => {
-                console.error('Error loading categories:', error);
+            error: (err: HttpErrorResponse) => {
+                console.error('Error loading categories:', err);
+                this.errorMessage.set(err.error?.message || 'Error al cargar categorías');
             }
         });
     }
@@ -92,31 +100,37 @@ export class ProductEditComponent implements OnInit {
             description: product.description || '',
             price: product.price,
             qtyStock: product.qtyStock,
-            imageUrl: product.imageUrl || '',
             status: product.status,
-            categoryIds: product.categories.map(c => c.id).filter(id => id !== undefined)
+            categoryId: product.category?.id || null
         });
+
+        // Establecer imagen original y preview
+        this.originalImageUrl.set(product.imageUrl || null);
+        this.imagePreview.set(product.imageUrl || null);
     }
 
-    onCategoryChange(event: Event, categoryId: number): void {
-        const checkbox = event.target as HTMLInputElement;
-        const currentIds = this.productForm.get('categoryIds')?.value || [];
+    onImageSelected(event: Event): void {
+        const input = event.target as HTMLInputElement;
+        if (input.files && input.files.length > 0) {
+            const file = input.files[0];
+            this.selectedFile.set(file);
 
-        if (checkbox.checked) {
-            this.productForm.patchValue({
-                categoryIds: [...currentIds, categoryId]
-            });
-        } else {
-            this.productForm.patchValue({
-                categoryIds: currentIds.filter((id: number) => id !== categoryId)
-            });
+            // Generar preview local de nueva imagen
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                this.imagePreview.set(e.target?.result as string);
+            };
+            reader.readAsDataURL(file);
         }
     }
 
-    isCategorySelected(categoryId: number): boolean {
-        const currentIds = this.productForm.get('categoryIds')?.value || [];
-        return currentIds.includes(categoryId);
+    removeNewImage(): void {
+        this.selectedFile.set(null);
+        // Restaurar imagen original
+        this.imagePreview.set(this.originalImageUrl());
     }
+
+
 
     onSubmit(): void {
         if (this.productForm.invalid) {
@@ -124,36 +138,60 @@ export class ProductEditComponent implements OnInit {
             return;
         }
 
-        this.isSubmitting.set(true);
-
         const formValue = this.productForm.value;
-        const selectedCategoryIds: number[] = formValue.categoryIds || [];
-        const selectedCategories = this.categories().filter(c =>
-            c.id && selectedCategoryIds.includes(c.id)
-        );
+        const categoryId: number = formValue.categoryId;
 
-        const changes: Partial<Product> = {
-            sku: formValue.sku,
+        if (!categoryId) {
+            this.errorMessage.set('Debe seleccionar una categoría');
+            return;
+        }
+
+        this.isSubmitting.set(true);
+        this.errorMessage.set('');
+
+        const dto: UpdateProductDto = {
             name: formValue.name,
-            model: formValue.model || null,
-            description: formValue.description || null,
+            model: formValue.model || undefined,
+            description: formValue.description || undefined,
             price: formValue.price,
             qtyStock: formValue.qtyStock,
-            imageUrl: formValue.imageUrl || null,
             status: formValue.status,
-            categories: selectedCategories
+            categoryId: categoryId
         };
 
-        this.productService.updateProduct(this.productId, changes).subscribe({
-            next: () => {
-                this.isSubmitting.set(false);
-                this.router.navigate(['/products']);
-            },
-            error: (error) => {
-                console.error('Error updating product:', error);
-                this.isSubmitting.set(false);
-            }
-        });
+        const file = this.selectedFile();
+
+        if (file) {
+            // Usuario seleccionó nueva imagen: usar updateProductWithImage
+            this.isUploading.set(true);
+            this.productService.updateProductWithImage(this.productId, dto, file).subscribe({
+                next: () => {
+                    this.isSubmitting.set(false);
+                    this.isUploading.set(false);
+                    this.router.navigate(['/products']);
+                },
+                error: (err: HttpErrorResponse) => {
+                    console.error('Error updating product:', err);
+                    this.errorMessage.set(err.error?.message || 'Error al actualizar el producto');
+                    this.isSubmitting.set(false);
+                    this.isUploading.set(false);
+                }
+            });
+        } else {
+            // Mantener imagen original: incluir imageUrl en DTO
+            dto.imageUrl = this.originalImageUrl() || undefined;
+            this.productService.updateProduct(this.productId, dto).subscribe({
+                next: () => {
+                    this.isSubmitting.set(false);
+                    this.router.navigate(['/products']);
+                },
+                error: (err: HttpErrorResponse) => {
+                    console.error('Error updating product:', err);
+                    this.errorMessage.set(err.error?.message || 'Error al actualizar el producto');
+                    this.isSubmitting.set(false);
+                }
+            });
+        }
     }
 
     onCancel(): void {

@@ -1,16 +1,61 @@
 import { Category } from './category.model';
 
 export interface Product {
-    id?: number;
+    id: number;
     sku: string;
     name: string;
-    model?: string | null;
-    description?: string | null;
+    model: string | null;
+    description: string | null;
     price: number;
-    imageUrl?: string | null;
-    status: 'ACTIVE' | 'INACTIVE';
+    imageUrl: string | null;
+    status: string;
     qtyStock: number;
-    categories: Category[];
-    createdAt?: string;
-    updatedAt?: string;
+    category: Category;
+    createdAt: string;
+    updatedAt: string;
+}
+
+export interface CreateProductDto {
+    sku: string;
+    name: string;
+    model?: string;
+    description?: string;
+    price: number;
+    qtyStock: number;
+    status: string;
+    categoryId: number;
+    imageUrl?: string;
+}
+
+export interface UpdateProductDto {
+    name?: string;
+    model?: string;
+    description?: string;
+    price?: number;
+    qtyStock?: number;
+    status?: string;
+    categoryId?: number;
+    imageUrl?: string;
+}
+
+export interface ProductQueryParams {
+    name?: string;
+    sku?: string;
+    status?: string;
+    categoryId?: number;
+    page?: number;
+    size?: number;
+    sort?: string;
+}
+
+export interface Page<T> {
+    content: T[];
+    totalElements: number;
+    totalPages: number;
+    size: number;
+    number: number;
+    numberOfElements: number;
+    first: boolean;
+    last: boolean;
+    empty: boolean;
 }

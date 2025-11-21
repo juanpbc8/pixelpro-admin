@@ -2,7 +2,8 @@ import { Component, ChangeDetectionStrategy, signal, OnInit, inject } from '@ang
 import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { Category } from '../../models/category.model';
+import { HttpErrorResponse } from '@angular/common/http';
+import { Category, CreateCategoryDto } from '../../models/category.model';
 import { CategoryService } from '../../services/category.service';
 
 @Component({
@@ -19,6 +20,7 @@ export class CategoriesCreateComponent implements OnInit {
 
     readonly parentCategories = signal<Category[]>([]);
     readonly isSubmitting = signal<boolean>(false);
+    readonly errorMessage = signal<string>('');
     readonly categoryForm: FormGroup;
 
     constructor() {
@@ -33,12 +35,13 @@ export class CategoriesCreateComponent implements OnInit {
     }
 
     loadParentCategories(): void {
-        this.categoryService.getParentCategories().subscribe({
+        this.categoryService.getCategories().subscribe({
             next: (categories) => {
                 this.parentCategories.set(categories);
             },
-            error: (error) => {
-                console.error('Error loading parent categories:', error);
+            error: (err: HttpErrorResponse) => {
+                console.error('Error loading categories:', err);
+                this.errorMessage.set(err.error?.message || 'Error al cargar categorías');
             }
         });
     }
@@ -50,20 +53,22 @@ export class CategoriesCreateComponent implements OnInit {
         }
 
         this.isSubmitting.set(true);
+        this.errorMessage.set('');
 
         const formValue = this.categoryForm.value;
-        const category: Category = {
+        const dto: CreateCategoryDto = {
             name: formValue.name,
             parentCategoryId: formValue.parentCategoryId || null
         };
 
-        this.categoryService.createCategory(category).subscribe({
+        this.categoryService.createCategory(dto).subscribe({
             next: () => {
                 this.isSubmitting.set(false);
                 this.router.navigate(['/categories']);
             },
-            error: (error) => {
-                console.error('Error creating category:', error);
+            error: (err: HttpErrorResponse) => {
+                console.error('Error creating category:', err);
+                this.errorMessage.set(err.error?.message || 'Error al crear la categoría');
                 this.isSubmitting.set(false);
             }
         });

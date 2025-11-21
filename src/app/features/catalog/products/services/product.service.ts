@@ -1,149 +1,102 @@
-import { Injectable, signal, computed } from '@angular/core';
-import { Observable, of, delay, throwError } from 'rxjs';
-import { Product } from '../models/product.model';
-import { Category } from '../models/category.model';
+import { Injectable, inject } from '@angular/core';
+import { HttpClient, HttpParams } from '@angular/common/http';
+import { Observable, of } from 'rxjs';
+import { switchMap } from 'rxjs/operators';
+import { Product, CreateProductDto, UpdateProductDto, ProductQueryParams, Page } from '../models/product.model';
+import { environment } from '../../../../../environments/environment';
+import { UploadService } from '../../../common/services/upload.service';
 
 @Injectable({
     providedIn: 'root'
 })
 export class ProductService {
-    private nextId = 6;
+    private readonly http = inject(HttpClient);
+    private readonly uploadService = inject(UploadService);
+    private readonly baseUrl = `${environment.apiUrl}/api/admin/products`;
 
-    private mockCategories: Category[] = [
-        { id: 1, name: 'Electrónica', parentCategoryId: null },
-        { id: 2, name: 'Ropa', parentCategoryId: null },
-        { id: 3, name: 'Hogar', parentCategoryId: null },
-        { id: 4, name: 'Deportes', parentCategoryId: null },
-        { id: 5, name: 'Computadoras', parentCategoryId: 1 },
-        { id: 6, name: 'Smartphones', parentCategoryId: 1 }
-    ];
+    getProducts(params: ProductQueryParams = {}): Observable<Page<Product>> {
+        const httpParams = this.buildQueryParams(params);
+        return this.http.get<Page<Product>>(this.baseUrl, { params: httpParams });
+    }
 
-    private readonly products = signal<Product[]>([
-        {
-            id: 1,
-            sku: 'LAPTOP-001',
-            name: 'Laptop HP Pavilion',
-            model: 'HP-15-DY2021',
-            description: 'Laptop de alto rendimiento con procesador Intel Core i7, 16GB RAM, 512GB SSD',
-            price: 899.99,
-            imageUrl: 'https://via.placeholder.com/300x300?text=Laptop+HP',
-            status: 'ACTIVE',
-            qtyStock: 15,
-            categories: [this.mockCategories[0], this.mockCategories[4]],
-            createdAt: '2024-01-15T10:30:00Z',
-            updatedAt: '2024-11-10T14:20:00Z'
-        },
-        {
-            id: 2,
-            sku: 'PHONE-002',
-            name: 'Samsung Galaxy S23',
-            model: 'SM-S911B',
-            description: 'Smartphone con pantalla AMOLED de 6.1", cámara de 50MP, 256GB',
-            price: 799.99,
-            imageUrl: 'https://via.placeholder.com/300x300?text=Galaxy+S23',
-            status: 'ACTIVE',
-            qtyStock: 30,
-            categories: [this.mockCategories[0], this.mockCategories[5]],
-            createdAt: '2024-02-20T09:15:00Z',
-            updatedAt: '2024-11-12T16:45:00Z'
-        },
-        {
-            id: 3,
-            sku: 'DESK-003',
-            name: 'Escritorio Ejecutivo',
-            model: 'EXEC-2024',
-            description: 'Escritorio de madera con acabado en nogal, 150x75cm',
-            price: 349.99,
-            imageUrl: null,
-            status: 'ACTIVE',
-            qtyStock: 8,
-            categories: [this.mockCategories[2]],
-            createdAt: '2024-03-10T11:00:00Z',
-            updatedAt: '2024-11-01T10:30:00Z'
-        },
-        {
-            id: 4,
-            sku: 'SHIRT-004',
-            name: 'Camisa Polo Nike',
-            model: 'NK-POLO-2024',
-            description: 'Camisa deportiva de algodón, talla M, color azul marino',
-            price: 45.99,
-            imageUrl: 'https://via.placeholder.com/300x300?text=Polo+Nike',
-            status: 'INACTIVE',
-            qtyStock: 0,
-            categories: [this.mockCategories[1], this.mockCategories[3]],
-            createdAt: '2024-04-05T08:20:00Z',
-            updatedAt: '2024-10-25T12:10:00Z'
-        },
-        {
-            id: 5,
-            sku: 'BIKE-005',
-            name: 'Bicicleta de Montaña',
-            model: 'MTB-PRO-2024',
-            description: 'Bicicleta con suspensión completa, 21 velocidades, rodada 29"',
-            price: 599.99,
-            imageUrl: 'https://via.placeholder.com/300x300?text=MTB',
-            status: 'ACTIVE',
-            qtyStock: 5,
-            categories: [this.mockCategories[3]],
-            createdAt: '2024-05-12T14:30:00Z',
-            updatedAt: '2024-11-15T09:00:00Z'
+    getProductById(id: number): Observable<Product> {
+        return this.http.get<Product>(`${this.baseUrl}/${id}`);
+    }
+
+    createProduct(dto: CreateProductDto): Observable<Product> {
+        return this.http.post<Product>(this.baseUrl, dto);
+    }
+
+    updateProduct(id: number, dto: UpdateProductDto): Observable<Product> {
+        return this.http.put<Product>(`${this.baseUrl}/${id}`, dto);
+    }
+
+    /**
+     * Crea un producto con imagen.
+     * Primero sube la imagen, luego crea el producto con la URL retornada.
+     */
+    createProductWithImage(productData: CreateProductDto, imageFile: File): Observable<Product> {
+        return this.uploadService.uploadProductImage(imageFile).pipe(
+            switchMap((imageUrl: string) => {
+                const productWithImage: CreateProductDto = {
+                    ...productData,
+                    imageUrl
+                };
+                return this.createProduct(productWithImage);
+            })
+        );
+    }
+
+    /**
+     * Actualiza un producto con opción de cambiar imagen.
+     * Si se proporciona imageFile, primero lo sube y luego actualiza el producto.
+     * Si no hay imageFile, actualiza directamente con los datos proporcionados.
+     */
+    updateProductWithImage(id: number, productData: UpdateProductDto, imageFile?: File): Observable<Product> {
+        if (imageFile) {
+            return this.uploadService.uploadProductImage(imageFile).pipe(
+                switchMap((imageUrl: string) => {
+                    const productWithImage: UpdateProductDto = {
+                        ...productData,
+                        imageUrl
+                    };
+                    return this.updateProduct(id, productWithImage);
+                })
+            );
+        } else {
+            return this.updateProduct(id, productData);
         }
-    ]);
-
-    readonly allProducts = computed(() => this.products());
-    readonly allCategories = computed(() => this.mockCategories);
-
-    getProducts(): Observable<Product[]> {
-        return of(this.products()).pipe(delay(300));
-    }
-
-    getProductById(id: number): Observable<Product | undefined> {
-        const product = this.products().find(p => p.id === id);
-        return of(product).pipe(delay(300));
-    }
-
-    createProduct(product: Product): Observable<Product> {
-        const newProduct: Product = {
-            ...product,
-            id: this.nextId++,
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString()
-        };
-
-        this.products.update(products => [...products, newProduct]);
-        return of(newProduct).pipe(delay(300));
-    }
-
-    updateProduct(id: number, changes: Partial<Product>): Observable<Product | undefined> {
-        const index = this.products().findIndex(p => p.id === id);
-
-        if (index === -1) {
-            return of(undefined).pipe(delay(300));
-        }
-
-        const updatedProduct: Product = {
-            ...this.products()[index],
-            ...changes,
-            id,
-            updatedAt: new Date().toISOString()
-        };
-
-        this.products.update(products => {
-            const newProducts = [...products];
-            newProducts[index] = updatedProduct;
-            return newProducts;
-        });
-
-        return of(updatedProduct).pipe(delay(300));
     }
 
     deleteProduct(id: number): Observable<void> {
-        this.products.update(products => products.filter(p => p.id !== id));
-        return of(void 0).pipe(delay(300));
+        return this.http.delete<void>(`${this.baseUrl}/${id}`);
     }
 
-    getCategories(): Observable<Category[]> {
-        return of(this.mockCategories).pipe(delay(200));
+    buildQueryParams(filters: ProductQueryParams): HttpParams {
+        let params = new HttpParams();
+
+        if (filters.name) {
+            params = params.set('name', filters.name);
+        }
+        if (filters.sku) {
+            params = params.set('sku', filters.sku);
+        }
+        if (filters.status) {
+            params = params.set('status', filters.status);
+        }
+        if (filters.categoryId !== undefined && filters.categoryId !== null) {
+            params = params.set('categoryId', filters.categoryId.toString());
+        }
+        if (filters.page !== undefined) {
+            params = params.set('page', filters.page.toString());
+        }
+        if (filters.size !== undefined) {
+            params = params.set('size', filters.size.toString());
+        }
+        if (filters.sort) {
+            params = params.set('sort', filters.sort);
+        }
+
+        return params;
     }
 }

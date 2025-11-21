@@ -2,56 +2,161 @@ import { Component, ChangeDetectionStrategy, signal, computed, OnInit, inject } 
 import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Product } from '../../models/product.model';
+import { HttpErrorResponse } from '@angular/common/http';
+import { Product, Page, ProductQueryParams } from '../../models/product.model';
 import { ProductService } from '../../services/product.service';
+import { Category } from '../../../categories/models/category.model';
+import { CategoryService } from '../../../categories/services/category.service';
 
 @Component({
   selector: 'app-products-list',
   imports: [CommonModule, FormsModule],
   templateUrl: './products-list.component.html',
   styleUrl: './products-list.component.css',
-  changeDetection: ChangeDetectionStrategy.OnPush
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  host: {
+    '(window:resize)': 'onWindowResize()'
+  }
 })
 export class ProductsListComponent implements OnInit {
   private readonly productService = inject(ProductService);
+  private readonly categoryService = inject(CategoryService);
   private readonly router = inject(Router);
 
+  // State
   readonly products = signal<Product[]>([]);
-  readonly searchTerm = signal<string>('');
+  readonly categories = signal<Category[]>([]);
+  readonly totalElements = signal<number>(0);
+  readonly totalPages = signal<number>(0);
+  readonly currentPage = signal<number>(0);
+  readonly pageSize = signal<number>(this.calculatePageSize()); // Dinámico basado en altura de pantalla
   readonly isLoading = signal<boolean>(false);
 
-  readonly filteredProducts = computed(() => {
-    const term = this.searchTerm().toLowerCase().trim();
-    if (!term) {
-      return this.products();
-    }
-    return this.products().filter(product =>
-      product.name.toLowerCase().includes(term) ||
-      product.sku.toLowerCase().includes(term) ||
-      (product.model?.toLowerCase() || '').includes(term)
-    );
+  // Filters
+  readonly filters = signal<{
+    name: string;
+    sku: string;
+    status: string;
+    categoryId: number | null;
+  }>({
+    name: '',
+    sku: '',
+    status: '',
+    categoryId: null
+  });
+
+  // Computed
+  readonly isFirstPage = computed(() => this.currentPage() === 0);
+  readonly isLastPage = computed(() => this.currentPage() >= this.totalPages() - 1);
+  readonly hasFilters = computed(() => {
+    const f = this.filters();
+    return !!(f.name || f.sku || f.status || f.categoryId);
   });
 
   ngOnInit(): void {
+    this.loadCategories();
     this.loadProducts();
+  }
+
+  /**
+   * Calcula el tamaño de página óptimo basado en la altura de la ventana.
+   */
+  private calculatePageSize(): number {
+    const height = window.innerHeight;
+
+    if (height < 750) {
+      return 6;
+    } else if (height < 950) {
+      return 8;
+    } else {
+      return 12;
+    }
+  }
+
+  /**
+   * Maneja cambios en el tamaño de la ventana.
+   * Recalcula el pageSize y recarga si hay cambio significativo.
+   */
+  onWindowResize(): void {
+    const newSize = this.calculatePageSize();
+    const currentSize = this.pageSize();
+
+    // Solo recalcular si el tamaño cambió
+    if (newSize !== currentSize) {
+      this.pageSize.set(newSize);
+      this.currentPage.set(0); // Reset a primera página
+      this.loadProducts();
+    }
+  }
+
+  loadCategories(): void {
+    this.categoryService.getCategories().subscribe({
+      next: (categories) => {
+        this.categories.set(categories);
+      },
+      error: (err: HttpErrorResponse) => {
+        console.error('Error loading categories:', err);
+      }
+    });
   }
 
   loadProducts(): void {
     this.isLoading.set(true);
-    this.productService.getProducts().subscribe({
-      next: (products) => {
-        this.products.set(products);
+    const f = this.filters();
+    const params: ProductQueryParams = {
+      page: this.currentPage(),
+      size: this.pageSize(),
+      ...(f.name && { name: f.name }),
+      ...(f.sku && { sku: f.sku }),
+      ...(f.status && { status: f.status }),
+      ...(f.categoryId && { categoryId: f.categoryId })
+    };
+
+    this.productService.getProducts(params).subscribe({
+      next: (page) => {
+        this.products.set(page.content);
+        this.totalElements.set(page.totalElements);
+        this.totalPages.set(page.totalPages);
         this.isLoading.set(false);
       },
-      error: (error) => {
-        console.error('Error loading products:', error);
+      error: (err: HttpErrorResponse) => {
+        console.error('Error loading products:', err);
         this.isLoading.set(false);
       }
     });
   }
 
-  onSearchChange(value: string): void {
-    this.searchTerm.set(value);
+  onFilterChange(): void {
+    this.currentPage.set(0);
+    this.loadProducts();
+  }
+
+  onResetFilters(): void {
+    this.filters.set({
+      name: '',
+      sku: '',
+      status: '',
+      categoryId: null
+    });
+    this.currentPage.set(0);
+    this.loadProducts();
+  }
+
+  onPageChange(page: number): void {
+    this.currentPage.set(page);
+    this.loadProducts();
+  }
+
+  onPreviousPage(): void {
+    if (!this.isFirstPage()) {
+      this.onPageChange(this.currentPage() - 1);
+    }
+  }
+
+  onNextPage(): void {
+    if (!this.isLastPage()) {
+      this.onPageChange(this.currentPage() + 1);
+    }
   }
 
   navigateToCreate(): void {
@@ -67,23 +172,27 @@ export class ProductsListComponent implements OnInit {
   }
 
   formatPrice(price: number): string {
-    return new Intl.NumberFormat('es-MX', {
+    return new Intl.NumberFormat('es-PE', {
       style: 'currency',
-      currency: 'USD'
+      currency: 'PEN'
     }).format(price);
   }
 
   formatDate(dateString?: string): string {
     if (!dateString) return '-';
     const date = new Date(dateString);
-    return new Intl.DateTimeFormat('es-MX', {
+    return new Intl.DateTimeFormat('es-PE', {
       year: 'numeric',
       month: '2-digit',
       day: '2-digit'
     }).format(date);
   }
 
-  getCategoryNames(product: Product): string {
-    return product.categories.map(c => c.name).join(', ') || '-';
+  getCategoryName(product: Product): string {
+    return product.category?.name || 'Sin categoría';
+  }
+
+  getStatusLabel(status: string): string {
+    return status === 'ACTIVO' ? 'Activo' : 'Inactivo';
   }
 }

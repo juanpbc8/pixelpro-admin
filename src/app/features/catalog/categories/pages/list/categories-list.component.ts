@@ -76,13 +76,15 @@ export class CategoriesListComponent implements OnInit {
   }
 
   getParentCategoryName(parentId: number | null | undefined): string {
-    return this.categoryService.getCategoryNameById(parentId);
+    if (!parentId) return 'Ninguna';
+    const parent = this.categories().find(c => c.id === parentId);
+    return parent?.name || 'Desconocida';
   }
 
   formatDate(dateString?: string): string {
     if (!dateString) return '-';
     const date = new Date(dateString);
-    return new Intl.DateTimeFormat('es-MX', {
+    return new Intl.DateTimeFormat('es-PE', {
       year: 'numeric',
       month: '2-digit',
       day: '2-digit',

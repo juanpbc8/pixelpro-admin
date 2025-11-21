@@ -13,15 +13,44 @@
 
   <div class="card border-0 shadow-sm">
     <div class="card-body">
-      <div class="row mb-3">
-        <div class="col-md-6">
-          <div class="input-group">
-            <span class="input-group-text bg-white">
-              <i class="bi bi-search"></i>
-            </span>
-            <input type="text" class="form-control" placeholder="Buscar por nombre o SKU..." [value]="searchTerm()"
-              (input)="onSearchChange($any($event.target).value)">
-          </div>
+      <!-- Barra de filtros -->
+      <div class="row g-3 mb-3">
+        <div class="col-md-3">
+          <label for="filterName" class="form-label">Nombre</label>
+          <input type="text" id="filterName" class="form-control" placeholder="Buscar por nombre..."
+            [(ngModel)]="filters().name">
+        </div>
+        <div class="col-md-3">
+          <label for="filterSku" class="form-label">SKU</label>
+          <input type="text" id="filterSku" class="form-control" placeholder="Buscar por SKU..."
+            [(ngModel)]="filters().sku">
+        </div>
+        <div class="col-md-2">
+          <label for="filterCategory" class="form-label">Categoría</label>
+          <select id="filterCategory" class="form-select" [(ngModel)]="filters().categoryId">
+            <option [ngValue]="null">Todas</option>
+            @for (category of categories(); track category.id) {
+            <option [ngValue]="category.id">{{ category.name }}</option>
+            }
+          </select>
+        </div>
+        <div class="col-md-2">
+          <label for="filterStatus" class="form-label">Estado</label>
+          <select id="filterStatus" class="form-select" [(ngModel)]="filters().status">
+            <option value="">Todos</option>
+            <option value="ACTIVO">Activo</option>
+            <option value="INACTIVO">Inactivo</option>
+          </select>
+        </div>
+        <div class="col-md-2 d-flex align-items-end gap-2">
+          <button type="button" class="btn btn-primary w-100" (click)="onFilterChange()">
+            <i class="bi bi-search"></i> Buscar
+          </button>
+          @if (hasFilters()) {
+          <button type="button" class="btn btn-outline-secondary" (click)="onResetFilters()" title="Limpiar filtros">
+            <i class="bi bi-x-lg"></i>
+          </button>
+          }
         </div>
       </div>
 
@@ -33,12 +62,12 @@
         <p class="text-muted mt-3">Cargando productos...</p>
       </div>
       } @else {
-      @if (filteredProducts().length === 0) {
+      @if (products().length === 0) {
       <div class="text-center py-5">
         <i class="bi bi-inbox fs-1 text-muted"></i>
         <p class="text-muted mt-3">
-          @if (searchTerm()) {
-          No se encontraron productos que coincidan con "{{ searchTerm() }}"
+          @if (hasFilters()) {
+          No se encontraron productos con los filtros aplicados
           } @else {
           No hay productos registrados
           }
@@ -55,13 +84,13 @@
               <th class="text-end">Precio</th>
               <th class="text-end">Stock</th>
               <th>Estado</th>
-              <th>Categorías</th>
+              <th>Categoría</th>
               <th>Creado</th>
               <th class="text-end">Acciones</th>
             </tr>
           </thead>
           <tbody>
-            @for (product of filteredProducts(); track product.id) {
+            @for (product of products(); track product.id) {
             <tr>
               <td>
                 <span class="badge bg-light text-dark font-monospace">{{ product.sku }}</span>
@@ -85,14 +114,14 @@
                 }
               </td>
               <td>
-                @if (product.status === 'ACTIVE') {
+                @if (product.status === 'ACTIVO') {
                 <span class="badge bg-success">Activo</span>
                 } @else {
                 <span class="badge bg-secondary">Inactivo</span>
                 }
               </td>
               <td>
-                <small class="text-muted">{{ getCategoryNames(product) }}</small>
+                <small class="text-muted">{{ getCategoryName(product) }}</small>
               </td>
               <td>
                 <small class="text-muted">{{ formatDate(product.createdAt) }}</small>
@@ -113,12 +142,48 @@
         </table>
       </div>
 
-      <div class="mt-3">
+      <!-- Paginación -->
+      <div class="d-flex justify-content-between align-items-center mt-3">
         <p class="text-muted mb-0">
           <small>
-            Mostrando {{ filteredProducts().length }} de {{ products().length }} productos
+            Mostrando {{ products().length }} de {{ totalElements() }} productos
+            @if (totalPages() > 0) {
+            (Página {{ currentPage() + 1 }} de {{ totalPages() }})
+            }
           </small>
         </p>
+
+        @if (totalPages() > 1) {
+        <nav aria-label="Navegación de páginas">
+          <ul class="pagination mb-0">
+            <li class="page-item" [class.disabled]="isFirstPage()">
+              <button class="page-link" type="button" (click)="onPreviousPage()" [disabled]="isFirstPage()">
+                <i class="bi bi-chevron-left"></i> Anterior
+              </button>
+            </li>
+
+            @for (page of [].constructor(totalPages()); track $index) {
+            @if ($index === 0 || $index === totalPages() - 1 || ($index >= currentPage() - 1 && $index <= currentPage()
+              + 1)) { <li class="page-item" [class.active]="currentPage() === $index">
+              <button class="page-link" type="button" (click)="onPageChange($index)">
+                {{ $index + 1 }}
+              </button>
+              </li>
+              } @else if ($index === currentPage() - 2 || $index === currentPage() + 2) {
+              <li class="page-item disabled">
+                <span class="page-link">...</span>
+              </li>
+              }
+              }
+
+              <li class="page-item" [class.disabled]="isLastPage()">
+                <button class="page-link" type="button" (click)="onNextPage()" [disabled]="isLastPage()">
+                  Siguiente <i class="bi bi-chevron-right"></i>
+                </button>
+              </li>
+          </ul>
+        </nav>
+        }
       </div>
       }
       }

@@ -2,7 +2,8 @@ import { Component, ChangeDetectionStrategy, signal, OnInit, inject } from '@ang
 import { Router, ActivatedRoute } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { Category } from '../../models/category.model';
+import { HttpErrorResponse } from '@angular/common/http';
+import { Category, UpdateCategoryDto } from '../../models/category.model';
 import { CategoryService } from '../../services/category.service';
 
 @Component({
@@ -23,6 +24,7 @@ export class CategoriesEditComponent implements OnInit {
     readonly isLoading = signal<boolean>(true);
     readonly isSubmitting = signal<boolean>(false);
     readonly notFound = signal<boolean>(false);
+    readonly errorMessage = signal<string>('');
     readonly categoryForm: FormGroup;
 
     private categoryId: number = 0;
@@ -48,17 +50,14 @@ export class CategoriesEditComponent implements OnInit {
         this.isLoading.set(true);
         this.categoryService.getCategoryById(this.categoryId).subscribe({
             next: (category) => {
-                if (category) {
-                    this.category.set(category);
-                    this.patchForm(category);
-                    this.notFound.set(false);
-                } else {
-                    this.notFound.set(true);
-                }
+                this.category.set(category);
+                this.patchForm(category);
+                this.notFound.set(false);
                 this.isLoading.set(false);
             },
-            error: (error) => {
-                console.error('Error loading category:', error);
+            error: (err: HttpErrorResponse) => {
+                console.error('Error loading category:', err);
+                this.errorMessage.set(err.error?.message || 'Error al cargar la categoría');
                 this.notFound.set(true);
                 this.isLoading.set(false);
             }
@@ -66,13 +65,14 @@ export class CategoriesEditComponent implements OnInit {
     }
 
     loadParentCategories(): void {
-        this.categoryService.getParentCategories().subscribe({
+        this.categoryService.getCategories().subscribe({
             next: (categories) => {
                 const filtered = categories.filter(c => c.id !== this.categoryId);
                 this.parentCategories.set(filtered);
             },
-            error: (error) => {
-                console.error('Error loading parent categories:', error);
+            error: (err: HttpErrorResponse) => {
+                console.error('Error loading categories:', err);
+                this.errorMessage.set(err.error?.message || 'Error al cargar categorías');
             }
         });
     }
@@ -91,20 +91,22 @@ export class CategoriesEditComponent implements OnInit {
         }
 
         this.isSubmitting.set(true);
+        this.errorMessage.set('');
 
         const formValue = this.categoryForm.value;
-        const changes: Partial<Category> = {
+        const dto: UpdateCategoryDto = {
             name: formValue.name,
             parentCategoryId: formValue.parentCategoryId || null
         };
 
-        this.categoryService.updateCategory(this.categoryId, changes).subscribe({
+        this.categoryService.updateCategory(this.categoryId, dto).subscribe({
             next: () => {
                 this.isSubmitting.set(false);
                 this.router.navigate(['/categories']);
             },
-            error: (error) => {
-                console.error('Error updating category:', error);
+            error: (err: HttpErrorResponse) => {
+                console.error('Error updating category:', err);
+                this.errorMessage.set(err.error?.message || 'Error al actualizar la categoría');
                 this.isSubmitting.set(false);
             }
         });

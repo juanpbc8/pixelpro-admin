@@ -1,6 +1,7 @@
-import { Component, ChangeDetectionStrategy, inject, computed, signal } from '@angular/core';
+import { Component, ChangeDetectionStrategy, inject, computed, signal, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
+import { Product } from '../../../catalog/products/models/product.model';
 import { OrderService } from '../../../orders/services/order.service';
 import { ProductService } from '../../../catalog/products/services/product.service';
 import { CustomerService } from '../../../customers/services/customer.service';
@@ -24,14 +25,29 @@ interface TopProduct {
     styleUrl: './dashboard.component.css',
     changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class DashboardComponent {
+export class DashboardComponent implements OnInit {
     private orderService = inject(OrderService);
     private productService = inject(ProductService);
     private customerService = inject(CustomerService);
 
     private readonly orders = this.orderService.orders;
-    private readonly products = this.productService.allProducts;
+    private readonly products = signal<Product[]>([]);
     private readonly customers = this.customerService.customers;
+
+    ngOnInit(): void {
+        this.loadProducts();
+    }
+
+    loadProducts(): void {
+        this.productService.getProducts({ size: 100 }).subscribe({
+            next: (page) => {
+                this.products.set(page.content);
+            },
+            error: (error) => {
+                console.error('Error loading products:', error);
+            }
+        });
+    }
 
     // KPI calculations
     readonly totalOrders = computed(() => this.orders().length);

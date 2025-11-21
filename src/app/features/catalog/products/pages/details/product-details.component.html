@@ -56,7 +56,7 @@
             @if (product()!.imageUrl) {
             <div class="col-md-4 mb-4 mb-md-0">
               <div class="product-image-container">
-                <img [src]="product()!.imageUrl" [alt]="product()!.name" class="img-fluid rounded">
+                <img [src]="product()!.imageUrl | imageUrl" [alt]="product()!.name" class="img-fluid rounded">
               </div>
             </div>
             }
@@ -66,7 +66,7 @@
               <div class="mb-4">
                 <div class="d-flex align-items-start justify-content-between mb-2">
                   <h3 class="mb-0">{{ product()!.name }}</h3>
-                  @if (product()!.status === 'ACTIVE') {
+                  @if (product()!.status === 'ACTIVO') {
                   <span class="badge bg-success">Activo</span>
                   } @else {
                   <span class="badge bg-secondary">Inactivo</span>
@@ -124,14 +124,12 @@
               }
 
               <div class="mb-4">
-                <label class="info-label">Categorías</label>
+                <label class="info-label">Categoría</label>
                 <div class="d-flex flex-wrap gap-2">
-                  @if (product()!.categories.length > 0) {
-                  @for (category of product()!.categories; track category.id) {
-                  <span class="badge bg-primary">{{ category.name }}</span>
-                  }
+                  @if (product()!.category) {
+                  <span class="badge bg-primary">{{ product()!.category.name }}</span>
                   } @else {
-                  <span class="text-muted">Sin categorías asignadas</span>
+                  <span class="text-muted">Sin categoría asignada</span>
                   }
                 </div>
               </div>

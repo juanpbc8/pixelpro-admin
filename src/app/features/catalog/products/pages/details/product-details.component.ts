@@ -3,10 +3,11 @@ import { Router, ActivatedRoute } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { Product } from '../../models/product.model';
 import { ProductService } from '../../services/product.service';
+import { ImageUrlPipe } from '../../../../../shared/pipes/image-url.pipe';
 
 @Component({
     selector: 'app-product-details',
-    imports: [CommonModule],
+    imports: [CommonModule, ImageUrlPipe],
     templateUrl: './product-details.component.html',
     styleUrl: './product-details.component.css',
     changeDetection: ChangeDetectionStrategy.OnPush
@@ -35,12 +36,8 @@ export class ProductDetailsComponent implements OnInit {
         this.isLoading.set(true);
         this.productService.getProductById(this.productId).subscribe({
             next: (product) => {
-                if (product) {
-                    this.product.set(product);
-                    this.notFound.set(false);
-                } else {
-                    this.notFound.set(true);
-                }
+                this.product.set(product);
+                this.notFound.set(false);
                 this.isLoading.set(false);
             },
             error: (error) => {
@@ -60,16 +57,16 @@ export class ProductDetailsComponent implements OnInit {
     }
 
     formatPrice(price: number): string {
-        return new Intl.NumberFormat('es-MX', {
+        return new Intl.NumberFormat('es-PE', {
             style: 'currency',
-            currency: 'USD'
+            currency: 'PEN'
         }).format(price);
     }
 
     formatDate(dateString?: string): string {
         if (!dateString) return '-';
         const date = new Date(dateString);
-        return new Intl.DateTimeFormat('es-MX', {
+        return new Intl.DateTimeFormat('es-PE', {
             year: 'numeric',
             month: 'long',
             day: 'numeric',
@@ -80,7 +77,7 @@ export class ProductDetailsComponent implements OnInit {
 
     getCategoryNames(): string {
         const product = this.product();
-        if (!product || !product.categories.length) return 'Sin categorías';
-        return product.categories.map(c => c.name).join(', ');
+        if (!product || !product.category) return 'Sin categoría';
+        return product.category.name;
     }
 }
