@@ -39,8 +39,7 @@ export interface UpdateProductDto {
 }
 
 export interface ProductQueryParams {
-    name?: string;
-    sku?: string;
+    search?: string;
     status?: string;
     categoryId?: number;
     page?: number;

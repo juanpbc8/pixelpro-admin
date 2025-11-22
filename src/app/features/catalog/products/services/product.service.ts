@@ -75,11 +75,8 @@ export class ProductService {
     buildQueryParams(filters: ProductQueryParams): HttpParams {
         let params = new HttpParams();
 
-        if (filters.name) {
-            params = params.set('name', filters.name);
-        }
-        if (filters.sku) {
-            params = params.set('sku', filters.sku);
+        if (filters.search) {
+            params = params.set('search', filters.search);
         }
         if (filters.status) {
             params = params.set('status', filters.status);

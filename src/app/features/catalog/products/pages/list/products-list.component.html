@@ -15,36 +15,37 @@
     <div class="card-body">
       <!-- Barra de filtros -->
       <div class="row g-3 mb-3">
-        <div class="col-md-3">
-          <label for="filterName" class="form-label">Nombre</label>
-          <input type="text" id="filterName" class="form-control" placeholder="Buscar por nombre..."
-            [(ngModel)]="filters().name">
+        <div class="col-md-4">
+          <label for="filterSearch" class="form-label">Búsqueda</label>
+          <div class="input-group">
+            <span class="input-group-text bg-white">
+              <i class="bi bi-search"></i>
+            </span>
+            <input type="text" id="filterSearch" class="form-control" placeholder="Buscar por nombre o SKU..."
+              [value]="filters().search" (input)="onSearchInput($event)">
+          </div>
         </div>
         <div class="col-md-3">
-          <label for="filterSku" class="form-label">SKU</label>
-          <input type="text" id="filterSku" class="form-control" placeholder="Buscar por SKU..."
-            [(ngModel)]="filters().sku">
-        </div>
-        <div class="col-md-2">
           <label for="filterCategory" class="form-label">Categoría</label>
-          <select id="filterCategory" class="form-select" [(ngModel)]="filters().categoryId">
-            <option [ngValue]="null">Todas</option>
+          <select id="filterCategory" class="form-select" [value]="filters().categoryId || ''"
+            (change)="onCategoryChange($event)">
+            <option value="">Todas</option>
             @for (category of categories(); track category.id) {
-            <option [ngValue]="category.id">{{ category.name }}</option>
+            <option [value]="category.id">{{ category.name }}</option>
             }
           </select>
         </div>
-        <div class="col-md-2">
+        <div class="col-md-3">
           <label for="filterStatus" class="form-label">Estado</label>
-          <select id="filterStatus" class="form-select" [(ngModel)]="filters().status">
+          <select id="filterStatus" class="form-select" [value]="filters().status" (change)="onStatusChange($event)">
             <option value="">Todos</option>
             <option value="ACTIVO">Activo</option>
             <option value="INACTIVO">Inactivo</option>
           </select>
         </div>
         <div class="col-md-2 d-flex align-items-end gap-2">
-          <button type="button" class="btn btn-primary w-100" (click)="onFilterChange()">
-            <i class="bi bi-search"></i> Buscar
+          <button type="button" class="btn btn-outline-secondary w-100" (click)="onRefresh()">
+            <i class="bi bi-arrow-clockwise"></i> Actualizar
           </button>
           @if (hasFilters()) {
           <button type="button" class="btn btn-outline-secondary" (click)="onResetFilters()" title="Limpiar filtros">

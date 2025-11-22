@@ -1,8 +1,11 @@
-import { Component, ChangeDetectionStrategy, signal, computed, OnInit, inject } from '@angular/core';
+import { Component, ChangeDetectionStrategy, signal, computed, OnInit, inject, DestroyRef } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpErrorResponse } from '@angular/common/http';
+import { Subject } from 'rxjs';
+import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 import { Product, Page, ProductQueryParams } from '../../models/product.model';
 import { ProductService } from '../../services/product.service';
 import { Category } from '../../../categories/models/category.model';
@@ -22,6 +25,9 @@ export class ProductsListComponent implements OnInit {
   private readonly productService = inject(ProductService);
   private readonly categoryService = inject(CategoryService);
   private readonly router = inject(Router);
+  private readonly destroyRef = inject(DestroyRef);
+  private readonly searchSubject = new Subject<string>();
+  private readonly debounceTimeMs = 500;
 
   // State
   readonly products = signal<Product[]>([]);
@@ -34,13 +40,11 @@ export class ProductsListComponent implements OnInit {
 
   // Filters
   readonly filters = signal<{
-    name: string;
-    sku: string;
+    search: string;
     status: string;
     categoryId: number | null;
   }>({
-    name: '',
-    sku: '',
+    search: '',
     status: '',
     categoryId: null
   });
@@ -50,12 +54,28 @@ export class ProductsListComponent implements OnInit {
   readonly isLastPage = computed(() => this.currentPage() >= this.totalPages() - 1);
   readonly hasFilters = computed(() => {
     const f = this.filters();
-    return !!(f.name || f.sku || f.status || f.categoryId);
+    return !!(f.search || f.status || f.categoryId);
   });
 
   ngOnInit(): void {
     this.loadCategories();
     this.loadProducts();
+
+    // Configurar búsqueda instantánea con debounce
+    this.searchSubject.pipe(
+      debounceTime(this.debounceTimeMs),
+      distinctUntilChanged(),
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe((searchTerm) => {
+      // 1. Update the signal/filter state
+      this.filters.update(current => ({ ...current, search: searchTerm }));
+
+      // 2. Reset page to 0
+      this.currentPage.set(0);
+
+      // 3. CRITICAL: Trigger the API call
+      this.loadProducts();
+    });
   }
 
   /**
@@ -106,8 +126,7 @@ export class ProductsListComponent implements OnInit {
     const params: ProductQueryParams = {
       page: this.currentPage(),
       size: this.pageSize(),
-      ...(f.name && { name: f.name }),
-      ...(f.sku && { sku: f.sku }),
+      ...(f.search && { search: f.search }),
       ...(f.status && { status: f.status }),
       ...(f.categoryId && { categoryId: f.categoryId })
     };
@@ -126,18 +145,39 @@ export class ProductsListComponent implements OnInit {
     });
   }
 
-  onFilterChange(): void {
+  onSearchInput(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    this.searchSubject.next(input.value);
+  }
+
+  onCategoryChange(event: Event): void {
+    const select = event.target as HTMLSelectElement;
+    const categoryId = select.value ? Number(select.value) : null;
+    this.filters.update(f => ({ ...f, categoryId }));
     this.currentPage.set(0);
+    this.loadProducts();
+  }
+
+  onStatusChange(event: Event): void {
+    const select = event.target as HTMLSelectElement;
+    this.filters.update(f => ({ ...f, status: select.value }));
+    this.currentPage.set(0);
+    this.loadProducts();
+  }
+
+  onRefresh(): void {
     this.loadProducts();
   }
 
   onResetFilters(): void {
     this.filters.set({
-      name: '',
-      sku: '',
+      search: '',
       status: '',
       categoryId: null
     });
+    // Limpiar el input de búsqueda
+    const searchInput = document.getElementById('filterSearch') as HTMLInputElement;
+    if (searchInput) searchInput.value = '';
     this.currentPage.set(0);
     this.loadProducts();
   }

@@ -1,8 +1,11 @@
-import { Component, ChangeDetectionStrategy, signal, computed, inject, OnInit } from '@angular/core';
+import { Component, ChangeDetectionStrategy, signal, computed, inject, OnInit, DestroyRef } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { HttpErrorResponse } from '@angular/common/http';
+import { Subject } from 'rxjs';
+import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 import { OrderService } from '../../services/order.service';
 import { Order, OrderStatus, DeliveryType, OrderQueryParams, Page } from '../../models/order.model';
 
@@ -18,6 +21,9 @@ import { Order, OrderStatus, DeliveryType, OrderQueryParams, Page } from '../../
 })
 export class OrdersListComponent implements OnInit {
   private readonly orderService = inject(OrderService);
+  private readonly destroyRef = inject(DestroyRef);
+  private readonly searchSubject = new Subject<string>();
+  private readonly debounceTimeMs = 500;
 
   // State
   readonly orders = signal<Order[]>([]);
@@ -52,6 +58,22 @@ export class OrdersListComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadOrders();
+
+    // Configurar búsqueda instantánea con debounce
+    this.searchSubject.pipe(
+      debounceTime(this.debounceTimeMs),
+      distinctUntilChanged(),
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe((searchTerm) => {
+      // 1. Update the signal/filter state
+      this.filters.update(current => ({ ...current, search: searchTerm }));
+
+      // 2. Reset page to 0
+      this.currentPage.set(0);
+
+      // 3. CRITICAL: Trigger the API call
+      this.loadOrders();
+    });
   }
 
   private calculatePageSize(): number {
@@ -95,8 +117,26 @@ export class OrdersListComponent implements OnInit {
     });
   }
 
-  onFilterChange(): void {
+  onSearchInput(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    this.searchSubject.next(input.value);
+  }
+
+  onStatusChange(event: Event): void {
+    const select = event.target as HTMLSelectElement;
+    this.filters.update(f => ({ ...f, status: select.value }));
     this.currentPage.set(0);
+    this.loadOrders();
+  }
+
+  onDeliveryTypeChange(event: Event): void {
+    const select = event.target as HTMLSelectElement;
+    this.filters.update(f => ({ ...f, deliveryType: select.value }));
+    this.currentPage.set(0);
+    this.loadOrders();
+  }
+
+  onRefresh(): void {
     this.loadOrders();
   }
 
@@ -106,6 +146,9 @@ export class OrdersListComponent implements OnInit {
       status: '',
       deliveryType: ''
     });
+    // Limpiar el input de búsqueda
+    const searchInput = document.getElementById('filterSearch') as HTMLInputElement;
+    if (searchInput) searchInput.value = '';
     this.currentPage.set(0);
     this.loadOrders();
   }

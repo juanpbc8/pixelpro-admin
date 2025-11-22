@@ -12,12 +12,18 @@
       <div class="row g-3 mb-3">
         <div class="col-md-4">
           <label for="filterSearch" class="form-label">Búsqueda</label>
-          <input type="text" id="filterSearch" class="form-control"
-            placeholder="Código de orden o nombre del cliente..." [(ngModel)]="filters().search">
+          <div class="input-group">
+            <span class="input-group-text bg-white">
+              <i class="bi bi-search"></i>
+            </span>
+            <input type="text" id="filterSearch" class="form-control"
+              placeholder="Código de orden o nombre del cliente..." [value]="filters().search"
+              (input)="onSearchInput($event)">
+          </div>
         </div>
         <div class="col-md-3">
           <label for="filterStatus" class="form-label">Estado</label>
-          <select id="filterStatus" class="form-select" [(ngModel)]="filters().status">
+          <select id="filterStatus" class="form-select" [value]="filters().status" (change)="onStatusChange($event)">
             <option value="">Todos los estados</option>
             @for (status of orderStatuses; track status) {
             <option [value]="status">{{ getStatusLabel(status) }}</option>
@@ -26,7 +32,8 @@
         </div>
         <div class="col-md-3">
           <label for="filterDeliveryType" class="form-label">Tipo de entrega</label>
-          <select id="filterDeliveryType" class="form-select" [(ngModel)]="filters().deliveryType">
+          <select id="filterDeliveryType" class="form-select" [value]="filters().deliveryType"
+            (change)="onDeliveryTypeChange($event)">
             <option value="">Todos los tipos</option>
             @for (type of deliveryTypes; track type) {
             <option [value]="type">{{ getDeliveryTypeLabel(type) }}</option>
@@ -34,8 +41,8 @@
           </select>
         </div>
         <div class="col-md-2 d-flex align-items-end gap-2">
-          <button type="button" class="btn btn-primary w-100" (click)="onFilterChange()">
-            <i class="bi bi-search"></i> Filtrar
+          <button type="button" class="btn btn-outline-secondary w-100" (click)="onRefresh()">
+            <i class="bi bi-arrow-clockwise"></i> Actualizar
           </button>
           @if (hasFilters()) {
           <button type="button" class="btn btn-outline-secondary" (click)="onResetFilters()" title="Limpiar filtros">
