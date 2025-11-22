@@ -53,12 +53,16 @@
       <hr>
       <div class="row">
         <div class="col-md-6">
-          <p class="mb-2 text-muted"><small><strong>Fecha de creación:</strong> {{
-              formatDate(customer()!.createdAt) }}</small></p>
+          <p class="mb-0 text-muted">
+            <small><i class="bi bi-calendar-plus me-1"></i><strong>Registrado el:</strong> {{
+              formatDate(customer()!.createdAt) }}</small>
+          </p>
         </div>
         <div class="col-md-6">
-          <p class="mb-2 text-muted"><small><strong>Última actualización:</strong> {{
-              formatDate(customer()!.updatedAt) }}</small></p>
+          <p class="mb-0 text-muted">
+            <small><i class="bi bi-calendar-check me-1"></i><strong>Última actualización:</strong> {{
+              formatDate(customer()!.updatedAt) }}</small>
+          </p>
         </div>
       </div>
     </div>
@@ -81,7 +85,7 @@
           <div class="card border">
             <div class="card-body p-3">
               <h6 class="card-subtitle mb-3 text-primary">
-                <i class="bi bi-geo-alt-fill"></i> {{ address.type }}
+                <i class="bi bi-geo-alt-fill"></i> {{ address.addressType }}
               </h6>
               <p class="mb-2"><strong>Departamento:</strong> {{ address.department }}</p>
               <p class="mb-2"><strong>Provincia:</strong> {{ address.province }}</p>
@@ -90,8 +94,14 @@
               @if (address.reference) {
               <p class="mb-2"><strong>Referencia:</strong> {{ address.reference }}</p>
               }
-              <p class="mb-2"><strong>Teléfono:</strong> {{ address.phone }}</p>
-              <p class="mb-0 text-muted"><small>Registrada: {{ formatDate(address.createdAt) }}</small></p>
+              <p class="mb-3"><strong>Teléfono:</strong> {{ address.phone }}</p>
+              <hr class="my-2">
+              <div class="text-muted small fst-italic">
+                <div class="d-flex justify-content-between">
+                  <span>Creado: {{ formatDate(address.createdAt) }}</span>
+                  <span>Actualizado: {{ formatDate(address.updatedAt) }}</span>
+                </div>
+              </div>
             </div>
           </div>
         </div>

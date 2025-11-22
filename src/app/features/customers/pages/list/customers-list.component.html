@@ -2,63 +2,162 @@
   <div class="d-flex justify-content-between align-items-center mb-4">
     <div>
       <h2 class="mb-1">Clientes</h2>
-      <p class="text-muted mb-0">Listado de clientes registrados</p>
+      <p class="text-muted mb-0">Gestión de clientes del sistema</p>
     </div>
   </div>
 
-  <div class="card">
+  <div class="card border-0 shadow-sm">
     <div class="card-body">
-      <div class="row mb-3">
-        <div class="col-md-6">
-          <input type="text" class="form-control" placeholder="Buscar por nombre, DNI o correo..."
-            [value]="searchText()" (input)="onSearchChange($event)" />
+      <!-- Barra de filtros -->
+      <div class="row g-3 mb-3">
+        <div class="col-md-4">
+          <label for="filterSearch" class="form-label">Búsqueda</label>
+          <div class="input-group">
+            <span class="input-group-text bg-white">
+              <i class="bi bi-search"></i>
+            </span>
+            <input type="text" id="filterSearch" class="form-control"
+              placeholder="Buscar por nombre, documento o email..." [value]="filters().search"
+              (input)="onSearchInput($event)">
+          </div>
+        </div>
+        <div class="col-md-3">
+          <label for="filterDocumentType" class="form-label">Tipo de documento</label>
+          <select id="filterDocumentType" class="form-select" [value]="filters().documentType"
+            (change)="onDocumentTypeChange($event)">
+            <option value="">Todos</option>
+            @for (docType of documentTypes; track docType) {
+            <option [value]="docType">{{ docType }}</option>
+            }
+          </select>
+        </div>
+        <div class="col-md-3">
+          <label for="filterCustomerType" class="form-label">Tipo de cliente</label>
+          <select id="filterCustomerType" class="form-select" [value]="filters().customerType"
+            (change)="onCustomerTypeChange($event)">
+            <option value="">Todos</option>
+            @for (custType of customerTypes; track custType) {
+            <option [value]="custType">{{ getCustomerTypeLabel(custType) }}</option>
+            }
+          </select>
+        </div>
+        <div class="col-md-2 d-flex align-items-end gap-2">
+          <button type="button" class="btn btn-outline-secondary w-100" (click)="onRefresh()">
+            <i class="bi bi-arrow-clockwise"></i> Actualizar
+          </button>
+          @if (hasFilters()) {
+          <button type="button" class="btn btn-outline-secondary" (click)="onResetFilters()" title="Limpiar filtros">
+            <i class="bi bi-x-lg"></i>
+          </button>
+          }
         </div>
       </div>
 
+      @if (isLoading()) {
+      <div class="text-center py-5">
+        <div class="spinner-border text-primary" role="status">
+          <span class="visually-hidden">Cargando...</span>
+        </div>
+        <p class="text-muted mt-3">Cargando clientes...</p>
+      </div>
+      } @else {
+      @if (customers().length === 0) {
+      <div class="text-center py-5">
+        <i class="bi bi-inbox fs-1 text-muted"></i>
+        <p class="text-muted mt-3">
+          @if (hasFilters()) {
+          No se encontraron clientes con los filtros aplicados
+          } @else {
+          No hay clientes registrados
+          }
+        </p>
+      </div>
+      } @else {
       <div class="table-responsive">
         <table class="table table-hover align-middle">
-          <thead>
+          <thead class="table-light">
             <tr>
-              <th>Nombre completo</th>
+              <th>Cliente</th>
               <th>Documento</th>
-              <th>Correo</th>
+              <th>Email</th>
               <th>Teléfono</th>
               <th>Tipo</th>
               <th class="text-end">Acciones</th>
             </tr>
           </thead>
           <tbody>
-            @if (customers().length === 0) {
-            <tr>
-              <td colspan="6" class="text-center py-4">
-                <p class="text-muted mb-0">No se encontraron clientes.</p>
-              </td>
-            </tr>
-            }
             @for (customer of customers(); track customer.id) {
             <tr>
-              <td>{{ getFullName(customer) }}</td>
+              <td>
+                <strong>{{ getFullName(customer) }}</strong>
+              </td>
               <td>
                 <span class="badge bg-secondary">{{ customer.documentType }}</span>
-                {{ customer.documentNumber }}
+                <span class="font-monospace ms-1">{{ customer.documentNumber }}</span>
               </td>
               <td>{{ customer.email }}</td>
               <td>{{ customer.phoneNumber }}</td>
-              <td>{{ getCustomerTypeLabel(customer.customerType) }}</td>
+              <td>
+                <span class="badge" [class]="getCustomerTypeBadgeClass(customer.customerType)">
+                  {{ getCustomerTypeLabel(customer.customerType) }}
+                </span>
+              </td>
               <td class="text-end">
-                <a [routerLink]="['/customers', customer.id]" class="btn btn-sm btn-outline-primary me-2">
-                  Ver
+                <a [routerLink]="['/customers', customer.id]" class="btn btn-sm btn-outline-primary">
+                  <i class="bi bi-eye"></i> Ver
                 </a>
-                <button type="button" class="btn btn-sm btn-outline-danger"
-                  (click)="deleteCustomer(customer.id, getFullName(customer))">
-                  Eliminar
-                </button>
               </td>
             </tr>
             }
           </tbody>
         </table>
       </div>
+
+      <!-- Paginación -->
+      <div class="d-flex justify-content-between align-items-center mt-3">
+        <p class="text-muted mb-0">
+          <small>
+            Mostrando {{ customers().length }} de {{ totalElements() }} clientes
+            @if (totalPages() > 0) {
+            (Página {{ currentPage() + 1 }} de {{ totalPages() }})
+            }
+          </small>
+        </p>
+
+        @if (totalPages() > 1) {
+        <nav aria-label="Navegación de páginas">
+          <ul class="pagination mb-0">
+            <li class="page-item" [class.disabled]="isFirstPage()">
+              <button class="page-link" type="button" (click)="onPreviousPage()" [disabled]="isFirstPage()">
+                <i class="bi bi-chevron-left"></i> Anterior
+              </button>
+            </li>
+
+            @for (page of [].constructor(totalPages()); track $index) {
+            @if ($index === 0 || $index === totalPages() - 1 || ($index >= currentPage() - 1 && $index <= currentPage()
+              + 1)) { <li class="page-item" [class.active]="currentPage() === $index">
+              <button class="page-link" type="button" (click)="onPageChange($index)">
+                {{ $index + 1 }}
+              </button>
+              </li>
+              } @else if ($index === currentPage() - 2 || $index === currentPage() + 2) {
+              <li class="page-item disabled">
+                <span class="page-link">...</span>
+              </li>
+              }
+              }
+
+              <li class="page-item" [class.disabled]="isLastPage()">
+                <button class="page-link" type="button" (click)="onNextPage()" [disabled]="isLastPage()">
+                  Siguiente <i class="bi bi-chevron-right"></i>
+                </button>
+              </li>
+          </ul>
+        </nav>
+        }
+      </div>
+      }
+      }
     </div>
   </div>
 </div>

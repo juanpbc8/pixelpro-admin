@@ -1,7 +1,9 @@
 import { Component, ChangeDetectionStrategy, inject, signal, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
+import { HttpErrorResponse } from '@angular/common/http';
 import { CustomerService } from '../../services/customer.service';
+import { Customer } from '../../models/customer.model';
 
 @Component({
   selector: 'app-customer-detail',
@@ -11,12 +13,12 @@ import { CustomerService } from '../../services/customer.service';
   imports: [CommonModule]
 })
 export class CustomerDetailComponent implements OnInit {
-  private customerService = inject(CustomerService);
-  private route = inject(ActivatedRoute);
-  private router = inject(Router);
+  private readonly customerService = inject(CustomerService);
+  private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
 
-  readonly customer = this.customerService.selectedCustomer;
-  readonly loading = this.customerService.loading;
+  readonly customer = signal<Customer | null>(null);
+  readonly loading = signal<boolean>(false);
   readonly notFound = signal<boolean>(false);
 
   ngOnInit(): void {
@@ -34,13 +36,24 @@ export class CustomerDetailComponent implements OnInit {
       return;
     }
 
-    this.customerService.loadCustomer(id);
+    this.loadCustomer(id);
+  }
 
-    setTimeout(() => {
-      if (!this.customer() && !this.loading()) {
-        this.notFound.set(true);
+  loadCustomer(id: number): void {
+    this.loading.set(true);
+    this.customerService.getCustomerById(id).subscribe({
+      next: (customer) => {
+        this.customer.set(customer);
+        this.loading.set(false);
+      },
+      error: (err: HttpErrorResponse) => {
+        console.error('Error loading customer:', err);
+        this.loading.set(false);
+        if (err.status === 404) {
+          this.notFound.set(true);
+        }
       }
-    }, 500);
+    });
   }
 
   goBack(): void {
@@ -54,16 +67,26 @@ export class CustomerDetailComponent implements OnInit {
   }
 
   getCustomerTypeLabel(type: string): string {
-    return type === 'natural' ? 'Natural' : 'Jurídica';
+    return type === 'NATURAL' ? 'Natural' : 'Jurídica';
   }
 
-  formatDate(date: string): string {
+  formatDate(dateString?: string | null): string {
+    // Retornar '-' si el valor es null, undefined o cadena vacía
+    if (!dateString) return '-';
+
+    const date = new Date(dateString);
+
+    // Verificar si la fecha es inválida
+    if (isNaN(date.getTime())) {
+      return '-';
+    }
+
     return new Intl.DateTimeFormat('es-PE', {
       year: 'numeric',
-      month: 'long',
-      day: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
       hour: '2-digit',
       minute: '2-digit'
-    }).format(new Date(date));
+    }).format(date);
   }
 }
