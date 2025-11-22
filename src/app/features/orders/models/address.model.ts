@@ -1,9 +1,10 @@
 export interface Address {
     id: number;
+    addressType: string;
     department: string;
-    district: string;
     province: string;
+    district: string;
     addressLine: string;
-    reference?: string | null;
-    phone: string;
+    addressReference: string | null;
+    addressPhone: string;
 }

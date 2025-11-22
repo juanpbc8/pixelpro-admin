@@ -4,6 +4,20 @@ import { Invoice } from './invoice.model';
 import { Customer } from './customer.model';
 import { Address } from './address.model';
 
+export enum OrderStatus {
+    PENDIENTE = 'PENDIENTE',
+    CONFIRMADO = 'CONFIRMADO',
+    PREPARANDO = 'PREPARANDO',
+    ENVIADO = 'ENVIADO',
+    ENTREGADO = 'ENTREGADO',
+    CANCELADO = 'CANCELADO'
+}
+
+export enum DeliveryType {
+    A_DOMICILIO = 'A_DOMICILIO',
+    RECOJO_EN_TIENDA = 'RECOJO_EN_TIENDA'
+}
+
 export interface Order {
     id: number;
     code: string;
@@ -17,9 +31,34 @@ export interface Order {
     updatedAt: string;
 
     customer: Customer;
-    shippingAddress: Address;
+    address: Address | null; // Puede ser null si es recojo en tienda
 
     items: OrderItem[];
     payments: Payment[];
-    invoice?: Invoice | null;
+    invoice: Invoice | null;
+}
+
+export interface OrderQueryParams {
+    search?: string;
+    status?: string;
+    deliveryType?: string;
+    page?: number;
+    size?: number;
+    sort?: string;
+}
+
+export interface OrderStatusUpdateDto {
+    status: string;
+}
+
+export interface Page<T> {
+    content: T[];
+    totalElements: number;
+    totalPages: number;
+    size: number;
+    number: number;
+    numberOfElements: number;
+    first: boolean;
+    last: boolean;
+    empty: boolean;
 }

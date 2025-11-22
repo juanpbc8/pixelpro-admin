@@ -1,71 +1,169 @@
-import { Component, ChangeDetectionStrategy, signal, computed, inject } from '@angular/core';
+import { Component, ChangeDetectionStrategy, signal, computed, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
+import { FormsModule } from '@angular/forms';
+import { HttpErrorResponse } from '@angular/common/http';
 import { OrderService } from '../../services/order.service';
-import { Order } from '../../models/order.model';
+import { Order, OrderStatus, DeliveryType, OrderQueryParams, Page } from '../../models/order.model';
 
 @Component({
   selector: 'app-orders-list',
   templateUrl: './orders-list.component.html',
   styleUrl: './orders-list.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, RouterLink]
+  imports: [CommonModule, RouterLink, FormsModule],
+  host: {
+    '(window:resize)': 'onWindowResize()'
+  }
 })
-export class OrdersListComponent {
-  private orderService = inject(OrderService);
+export class OrdersListComponent implements OnInit {
+  private readonly orderService = inject(OrderService);
 
-  readonly searchText = signal<string>('');
-  readonly orders = computed(() => {
-    const search = this.searchText().toLowerCase();
-    const allOrders = this.orderService.orders();
+  // State
+  readonly orders = signal<Order[]>([]);
+  readonly totalElements = signal<number>(0);
+  readonly totalPages = signal<number>(0);
+  readonly currentPage = signal<number>(0);
+  readonly pageSize = signal<number>(this.calculatePageSize());
+  readonly isLoading = signal<boolean>(false);
 
-    if (!search) {
-      return allOrders;
-    }
-
-    return allOrders.filter((order: Order) =>
-      order.code.toLowerCase().includes(search) ||
-      `${order.customer.firstName} ${order.customer.lastName}`.toLowerCase().includes(search)
-    );
+  // Filters
+  readonly filters = signal<{
+    search: string;
+    status: string;
+    deliveryType: string;
+  }>({
+    search: '',
+    status: '',
+    deliveryType: ''
   });
 
-  constructor() {
+  // Enums para el template
+  readonly orderStatuses = Object.values(OrderStatus);
+  readonly deliveryTypes = Object.values(DeliveryType);
+
+  // Computed
+  readonly isFirstPage = computed(() => this.currentPage() === 0);
+  readonly isLastPage = computed(() => this.currentPage() >= this.totalPages() - 1);
+  readonly hasFilters = computed(() => {
+    const f = this.filters();
+    return !!(f.search || f.status || f.deliveryType);
+  });
+
+  ngOnInit(): void {
     this.loadOrders();
   }
 
+  private calculatePageSize(): number {
+    const height = window.innerHeight;
+    if (height < 750) return 5;
+    if (height < 950) return 7;
+    return 9;
+  }
+
+  onWindowResize(): void {
+    const newSize = this.calculatePageSize();
+    if (newSize !== this.pageSize()) {
+      this.pageSize.set(newSize);
+      this.currentPage.set(0);
+      this.loadOrders();
+    }
+  }
+
   loadOrders(): void {
-    this.orderService.getOrders().subscribe();
+    this.isLoading.set(true);
+    const f = this.filters();
+    const params: OrderQueryParams = {
+      page: this.currentPage(),
+      size: this.pageSize(),
+      ...(f.search && { search: f.search }),
+      ...(f.status && { status: f.status }),
+      ...(f.deliveryType && { deliveryType: f.deliveryType })
+    };
+
+    this.orderService.getAllOrders(params).subscribe({
+      next: (page) => {
+        this.orders.set(page.content);
+        this.totalElements.set(page.totalElements);
+        this.totalPages.set(page.totalPages);
+        this.isLoading.set(false);
+      },
+      error: (err: HttpErrorResponse) => {
+        console.error('Error loading orders:', err);
+        this.isLoading.set(false);
+      }
+    });
   }
 
-  onSearchChange(event: Event): void {
-    const input = event.target as HTMLInputElement;
-    this.searchText.set(input.value);
+  onFilterChange(): void {
+    this.currentPage.set(0);
+    this.loadOrders();
   }
 
-  deleteOrder(id: number): void {
-    if (confirm('¿Estás seguro de que deseas eliminar esta orden?')) {
-      this.orderService.deleteOrder(id).subscribe({
-        next: () => {
-          console.log('Orden eliminada exitosamente');
-        },
-        error: (error: Error) => {
-          console.error('Error al eliminar la orden:', error);
-        }
-      });
+  onResetFilters(): void {
+    this.filters.set({
+      search: '',
+      status: '',
+      deliveryType: ''
+    });
+    this.currentPage.set(0);
+    this.loadOrders();
+  }
+
+  onPageChange(page: number): void {
+    this.currentPage.set(page);
+    this.loadOrders();
+  }
+
+  onPreviousPage(): void {
+    if (!this.isFirstPage()) {
+      this.onPageChange(this.currentPage() - 1);
+    }
+  }
+
+  onNextPage(): void {
+    if (!this.isLastPage()) {
+      this.onPageChange(this.currentPage() + 1);
     }
   }
 
   getStatusBadgeClass(status: string): string {
     switch (status) {
-      case 'Completado':
+      case OrderStatus.ENTREGADO:
         return 'badge bg-success';
-      case 'Pendiente':
+      case OrderStatus.PENDIENTE:
         return 'badge bg-warning text-dark';
-      case 'Cancelado':
+      case OrderStatus.CANCELADO:
         return 'badge bg-danger';
+      case OrderStatus.CONFIRMADO:
+        return 'badge bg-info text-dark';
+      case OrderStatus.PREPARANDO:
+        return 'badge bg-primary';
+      case OrderStatus.ENVIADO:
+        return 'badge bg-secondary';
       default:
         return 'badge bg-secondary';
     }
+  }
+
+  getStatusLabel(status: string): string {
+    const labels: Record<string, string> = {
+      [OrderStatus.PENDIENTE]: 'Pendiente',
+      [OrderStatus.CONFIRMADO]: 'Confirmado',
+      [OrderStatus.PREPARANDO]: 'Preparando',
+      [OrderStatus.ENVIADO]: 'Enviado',
+      [OrderStatus.ENTREGADO]: 'Entregado',
+      [OrderStatus.CANCELADO]: 'Cancelado'
+    };
+    return labels[status] || status;
+  }
+
+  getDeliveryTypeLabel(type: string): string {
+    const labels: Record<string, string> = {
+      [DeliveryType.A_DOMICILIO]: 'Envío a domicilio',
+      [DeliveryType.RECOJO_EN_TIENDA]: 'Recojo en tienda'
+    };
+    return labels[type] || type;
   }
 
   formatCurrency(amount: number): string {

@@ -2,65 +2,163 @@
   <div class="d-flex justify-content-between align-items-center mb-4">
     <div>
       <h2 class="mb-1">Órdenes</h2>
-      <p class="text-muted mb-0">Listado de órdenes del sistema</p>
+      <p class="text-muted mb-0">Gestión de órdenes del sistema</p>
     </div>
   </div>
 
-  <div class="card">
+  <div class="card border-0 shadow-sm">
     <div class="card-body">
-      <div class="row mb-3">
-        <div class="col-md-6">
-          <input type="text" class="form-control" placeholder="Buscar por código o cliente..." [value]="searchText()"
-            (input)="onSearchChange($event)" />
+      <!-- Barra de filtros -->
+      <div class="row g-3 mb-3">
+        <div class="col-md-4">
+          <label for="filterSearch" class="form-label">Búsqueda</label>
+          <input type="text" id="filterSearch" class="form-control"
+            placeholder="Código de orden o nombre del cliente..." [(ngModel)]="filters().search">
+        </div>
+        <div class="col-md-3">
+          <label for="filterStatus" class="form-label">Estado</label>
+          <select id="filterStatus" class="form-select" [(ngModel)]="filters().status">
+            <option value="">Todos los estados</option>
+            @for (status of orderStatuses; track status) {
+            <option [value]="status">{{ getStatusLabel(status) }}</option>
+            }
+          </select>
+        </div>
+        <div class="col-md-3">
+          <label for="filterDeliveryType" class="form-label">Tipo de entrega</label>
+          <select id="filterDeliveryType" class="form-select" [(ngModel)]="filters().deliveryType">
+            <option value="">Todos los tipos</option>
+            @for (type of deliveryTypes; track type) {
+            <option [value]="type">{{ getDeliveryTypeLabel(type) }}</option>
+            }
+          </select>
+        </div>
+        <div class="col-md-2 d-flex align-items-end gap-2">
+          <button type="button" class="btn btn-primary w-100" (click)="onFilterChange()">
+            <i class="bi bi-search"></i> Filtrar
+          </button>
+          @if (hasFilters()) {
+          <button type="button" class="btn btn-outline-secondary" (click)="onResetFilters()" title="Limpiar filtros">
+            <i class="bi bi-x-lg"></i>
+          </button>
+          }
         </div>
       </div>
 
+      @if (isLoading()) {
+      <div class="text-center py-5">
+        <div class="spinner-border text-primary" role="status">
+          <span class="visually-hidden">Cargando...</span>
+        </div>
+        <p class="text-muted mt-3">Cargando órdenes...</p>
+      </div>
+      } @else {
+      @if (orders().length === 0) {
+      <div class="text-center py-5">
+        <i class="bi bi-inbox fs-1 text-muted"></i>
+        <p class="text-muted mt-3">
+          @if (hasFilters()) {
+          No se encontraron órdenes con los filtros aplicados
+          } @else {
+          No hay órdenes registradas
+          }
+        </p>
+      </div>
+      } @else {
       <div class="table-responsive">
-        <table class="table table-hover">
-          <thead>
+        <table class="table table-hover align-middle">
+          <thead class="table-light">
             <tr>
               <th>Código</th>
               <th>Cliente</th>
               <th>Fecha</th>
-              <th>Total</th>
+              <th class="text-end">Total</th>
               <th>Estado</th>
               <th>Tipo de entrega</th>
               <th class="text-end">Acciones</th>
             </tr>
           </thead>
           <tbody>
-            @if (orders().length === 0) {
-            <tr>
-              <td colspan="7" class="text-center py-4">
-                <p class="text-muted mb-0">No se encontraron órdenes</p>
-              </td>
-            </tr>
-            }
             @for (order of orders(); track order.id) {
             <tr>
-              <td>{{ order.code }}</td>
-              <td>{{ order.customer.firstName }} {{ order.customer.lastName }}</td>
-              <td>{{ formatDate(order.createdAt) }}</td>
-              <td>{{ formatCurrency(order.total) }}</td>
+              <td>
+                <span class="badge bg-light text-dark font-monospace">{{ order.code }}</span>
+              </td>
+              <td>
+                <strong>{{ order.customer.firstName }} {{ order.customer.lastName }}</strong>
+                <br>
+                <small class="text-muted">{{ order.customer.email }}</small>
+              </td>
+              <td>
+                <small>{{ formatDate(order.createdAt) }}</small>
+              </td>
+              <td class="text-end">
+                <strong>{{ formatCurrency(order.total) }}</strong>
+              </td>
               <td>
                 <span [class]="getStatusBadgeClass(order.status)">
-                  {{ order.status }}
+                  {{ getStatusLabel(order.status) }}
                 </span>
               </td>
-              <td>{{ order.deliveryType }}</td>
+              <td>
+                <small class="text-muted">{{ getDeliveryTypeLabel(order.deliveryType) }}</small>
+              </td>
               <td class="text-end">
-                <a [routerLink]="['/orders', order.id]" class="btn btn-sm btn-outline-primary me-2">
-                  Ver
+                <a [routerLink]="['/orders', order.id]" class="btn btn-sm btn-outline-primary">
+                  <i class="bi bi-eye"></i> Ver
                 </a>
-                <button type="button" class="btn btn-sm btn-outline-danger" (click)="deleteOrder(order.id)">
-                  Eliminar
-                </button>
               </td>
             </tr>
             }
           </tbody>
         </table>
       </div>
+
+      <!-- Paginación -->
+      <div class="d-flex justify-content-between align-items-center mt-3">
+        <p class="text-muted mb-0">
+          <small>
+            Mostrando {{ orders().length }} de {{ totalElements() }} órdenes
+            @if (totalPages() > 0) {
+            (Página {{ currentPage() + 1 }} de {{ totalPages() }})
+            }
+          </small>
+        </p>
+
+        @if (totalPages() > 1) {
+        <nav aria-label="Navegación de páginas">
+          <ul class="pagination mb-0">
+            <li class="page-item" [class.disabled]="isFirstPage()">
+              <button class="page-link" type="button" (click)="onPreviousPage()" [disabled]="isFirstPage()">
+                <i class="bi bi-chevron-left"></i> Anterior
+              </button>
+            </li>
+
+            @for (page of [].constructor(totalPages()); track $index) {
+            @if ($index === 0 || $index === totalPages() - 1 || ($index >= currentPage() - 1 && $index <= currentPage()
+              + 1)) { <li class="page-item" [class.active]="currentPage() === $index">
+              <button class="page-link" type="button" (click)="onPageChange($index)">
+                {{ $index + 1 }}
+              </button>
+              </li>
+              } @else if ($index === currentPage() - 2 || $index === currentPage() + 2) {
+              <li class="page-item disabled">
+                <span class="page-link">...</span>
+              </li>
+              }
+              }
+
+              <li class="page-item" [class.disabled]="isLastPage()">
+                <button class="page-link" type="button" (click)="onNextPage()" [disabled]="isLastPage()">
+                  Siguiente <i class="bi bi-chevron-right"></i>
+                </button>
+              </li>
+          </ul>
+        </nav>
+        }
+      </div>
+      }
+      }
     </div>
   </div>
 </div>
