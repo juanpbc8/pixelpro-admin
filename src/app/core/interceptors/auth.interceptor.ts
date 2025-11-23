@@ -1,15 +1,34 @@
-import { HttpInterceptorFn } from '@angular/common/http';
+import { HttpInterceptorFn, HttpErrorResponse } from '@angular/common/http';
+import { inject } from '@angular/core';
+import { Router } from '@angular/router';
+import { catchError, throwError } from 'rxjs';
 
+/**
+ * Interceptor de autenticación que:
+ * 1. Asegura que todas las peticiones incluyan withCredentials: true (cookies)
+ * 2. Maneja errores 401 globalmente redirigiendo a login
+ */
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
-    // TODO: Implement JWT token injection when authentication is added
-    // const token = localStorage.getItem('auth_token');
-    // if (token) {
-    //     req = req.clone({
-    //         setHeaders: {
-    //             Authorization: `Bearer ${token}`
-    //         }
-    //     });
-    // }
+    const router = inject(Router);
 
-    return next(req);
+    // Clonar la petición para añadir withCredentials
+    const authReq = req.clone({
+        withCredentials: true
+    });
+
+    return next(authReq).pipe(
+        catchError((error: HttpErrorResponse) => {
+            // Manejo global de errores 401 Unauthorized
+            if (error.status === 401) {
+                // Solo redirigir si no estamos ya en login
+                if (!router.url.includes('/login')) {
+                    router.navigate(['/login'], {
+                        queryParams: { returnUrl: router.url }
+                    });
+                }
+            }
+
+            return throwError(() => error);
+        })
+    );
 };
