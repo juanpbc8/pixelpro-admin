@@ -5,6 +5,7 @@ import { Router } from '@angular/router';
 import { HttpErrorResponse } from '@angular/common/http';
 import { UserService } from '../../services/user.service';
 import { UserCreateRequest } from '../../models/user.model';
+import { AlertService } from '../../../../shared/services/alert.service';
 
 @Component({
     selector: 'app-user-create',
@@ -17,9 +18,12 @@ export class UserCreateComponent implements OnInit {
     private readonly fb = inject(FormBuilder);
     private readonly userService = inject(UserService);
     private readonly router = inject(Router);
+    private readonly alertService = inject(AlertService);
 
     readonly staffRoles = signal<string[]>([]);
     readonly isSubmitting = signal<boolean>(false);
+    readonly showPassword = signal<boolean>(false);
+    readonly showConfirmPassword = signal<boolean>(false);
     userForm!: FormGroup;
 
     ngOnInit(): void {
@@ -78,12 +82,19 @@ export class UserCreateComponent implements OnInit {
 
         this.userService.createUser(request).subscribe({
             next: () => {
+                this.alertService.success(
+                    'Usuario creado',
+                    'El usuario ha sido creado exitosamente.'
+                );
                 this.router.navigate(['/users']);
             },
             error: (err: HttpErrorResponse) => {
                 console.error('Error creating user:', err);
                 this.isSubmitting.set(false);
-                alert('Error al crear el usuario. Por favor, intente nuevamente.');
+                this.alertService.error(
+                    'Error al crear usuario',
+                    err.error?.message || 'Por favor, intente nuevamente.'
+                );
             }
         });
     }
@@ -123,5 +134,13 @@ export class UserCreateComponent implements OnInit {
             return 'Las contraseñas no coinciden.';
         }
         return '';
+    }
+
+    togglePasswordVisibility(): void {
+        this.showPassword.update(value => !value);
+    }
+
+    toggleConfirmPasswordVisibility(): void {
+        this.showConfirmPassword.update(value => !value);
     }
 }

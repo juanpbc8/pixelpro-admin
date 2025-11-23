@@ -4,6 +4,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Category } from '../../models/category.model';
 import { CategoryService } from '../../services/category.service';
+import { AlertService } from '../../../../../shared/services/alert.service';
 
 @Component({
   selector: 'app-categories-list',
@@ -15,6 +16,7 @@ import { CategoryService } from '../../services/category.service';
 export class CategoriesListComponent implements OnInit {
   private readonly categoryService = inject(CategoryService);
   private readonly router = inject(Router);
+  private readonly alertService = inject(AlertService);
 
   readonly categories = signal<Category[]>([]);
   readonly searchTerm = signal<string>('');
@@ -60,17 +62,29 @@ export class CategoriesListComponent implements OnInit {
     this.router.navigate(['/categories', id, 'edit']);
   }
 
-  onDelete(category: Category): void {
-    const confirmed = confirm(`¿Estás seguro de eliminar la categoría "${category.name}"?`);
+  async onDelete(category: Category): Promise<void> {
+    const confirmed = await this.alertService.confirmDelete(
+      '¿Eliminar categoría?',
+      `¿Estás seguro de eliminar la categoría "${category.name}"? Esta acción no se puede deshacer.`,
+      'Sí, eliminar'
+    );
+
     if (!confirmed) return;
 
     this.categoryService.deleteCategory(category.id!).subscribe({
       next: () => {
+        this.alertService.success(
+          'Categoría eliminada',
+          'La categoría ha sido eliminada exitosamente.'
+        );
         this.loadCategories();
       },
       error: (error) => {
         console.error('Error deleting category:', error);
-        alert('Error al eliminar la categoría');
+        this.alertService.error(
+          'Error al eliminar',
+          error.error?.message || 'No se pudo eliminar la categoría.'
+        );
       }
     });
   }

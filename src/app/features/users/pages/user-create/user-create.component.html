@@ -25,9 +25,16 @@
             <!-- Password -->
             <div class="mb-3">
               <label for="password" class="form-label">Contraseña</label>
-              <input type="password" class="form-control" id="password" formControlName="password"
-                [class.is-invalid]="userForm.get('password')?.invalid && userForm.get('password')?.touched"
-                placeholder="Mínimo 8 caracteres" />
+              <div class="input-group">
+                <input [type]="showPassword() ? 'text' : 'password'" class="form-control" id="password"
+                  formControlName="password"
+                  [class.is-invalid]="userForm.get('password')?.invalid && userForm.get('password')?.touched"
+                  placeholder="Mínimo 8 caracteres" />
+                <button class="btn btn-outline-secondary" type="button" (click)="togglePasswordVisibility()"
+                  [attr.aria-label]="showPassword() ? 'Ocultar contraseña' : 'Mostrar contraseña'">
+                  <i class="bi" [class.bi-eye-slash]="showPassword()" [class.bi-eye]="!showPassword()"></i>
+                </button>
+              </div>
               @if (getErrorMessage('password')) {
               <div class="invalid-feedback d-block">
                 {{ getErrorMessage('password') }}
@@ -38,9 +45,17 @@
             <!-- Confirm Password -->
             <div class="mb-3">
               <label for="confirmPassword" class="form-label">Confirmar contraseña</label>
-              <input type="password" class="form-control" id="confirmPassword" formControlName="confirmPassword"
-                [class.is-invalid]="(userForm.get('confirmPassword')?.invalid && userForm.get('confirmPassword')?.touched) || getPasswordMismatchError()"
-                placeholder="Repita la contraseña" />
+              <div class="input-group">
+                <input [type]="showConfirmPassword() ? 'text' : 'password'" class="form-control" id="confirmPassword"
+                  formControlName="confirmPassword"
+                  [class.is-invalid]="(userForm.get('confirmPassword')?.invalid && userForm.get('confirmPassword')?.touched) || getPasswordMismatchError()"
+                  placeholder="Repita la contraseña" />
+                <button class="btn btn-outline-secondary" type="button" (click)="toggleConfirmPasswordVisibility()"
+                  [attr.aria-label]="showConfirmPassword() ? 'Ocultar contraseña' : 'Mostrar contraseña'">
+                  <i class="bi" [class.bi-eye-slash]="showConfirmPassword()"
+                    [class.bi-eye]="!showConfirmPassword()"></i>
+                </button>
+              </div>
               @if (getErrorMessage('confirmPassword')) {
               <div class="invalid-feedback d-block">
                 {{ getErrorMessage('confirmPassword') }}

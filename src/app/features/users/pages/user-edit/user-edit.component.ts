@@ -5,6 +5,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { HttpErrorResponse } from '@angular/common/http';
 import { UserService } from '../../services/user.service';
 import { User, UserUpdateRequest } from '../../models/user.model';
+import { AlertService } from '../../../../shared/services/alert.service';
 
 @Component({
     selector: 'app-user-edit',
@@ -18,6 +19,7 @@ export class UserEditComponent implements OnInit {
     private userService = inject(UserService);
     private route = inject(ActivatedRoute);
     private router = inject(Router);
+    private alertService = inject(AlertService);
 
     readonly user = signal<User | null>(null);
     readonly isLoading = signal<boolean>(true);
@@ -25,6 +27,8 @@ export class UserEditComponent implements OnInit {
     readonly notFound = signal<boolean>(false);
     readonly passwordResetSuccess = signal<boolean>(false);
     readonly isSubmitting = signal<boolean>(false);
+    readonly showNewPassword = signal<boolean>(false);
+    readonly showConfirmNewPassword = signal<boolean>(false);
 
     userForm!: FormGroup;
     passwordForm!: FormGroup;
@@ -136,11 +140,18 @@ export class UserEditComponent implements OnInit {
 
         this.userService.updateUser(this.userId, request).subscribe({
             next: () => {
+                this.alertService.success(
+                    'Usuario actualizado',
+                    'Los cambios han sido guardados exitosamente.'
+                );
                 this.router.navigate(['/users']);
             },
             error: (err: HttpErrorResponse) => {
                 console.error('Error updating user:', err);
-                alert('Error al actualizar el usuario. Por favor, intente nuevamente.');
+                this.alertService.error(
+                    'Error al actualizar usuario',
+                    err.error?.message || 'Por favor, intente nuevamente.'
+                );
                 this.isSubmitting.set(false);
             }
         });
@@ -157,13 +168,20 @@ export class UserEditComponent implements OnInit {
             next: () => {
                 this.passwordResetSuccess.set(true);
                 this.passwordForm.reset();
+                this.alertService.success(
+                    'Contraseña actualizada',
+                    'La contraseña ha sido restablecida exitosamente.'
+                );
                 setTimeout(() => {
                     this.passwordResetSuccess.set(false);
                 }, 3000);
             },
             error: (err: HttpErrorResponse) => {
                 console.error('Error resetting password:', err);
-                alert('Error al restablecer la contraseña. Por favor, intente nuevamente.');
+                this.alertService.error(
+                    'Error al restablecer contraseña',
+                    err.error?.message || 'Por favor, intente nuevamente.'
+                );
             }
         });
     }
@@ -202,5 +220,13 @@ export class UserEditComponent implements OnInit {
             return 'Las contraseñas no coinciden.';
         }
         return '';
+    }
+
+    toggleNewPasswordVisibility(): void {
+        this.showNewPassword.update(value => !value);
+    }
+
+    toggleConfirmNewPasswordVisibility(): void {
+        this.showConfirmNewPassword.update(value => !value);
     }
 }

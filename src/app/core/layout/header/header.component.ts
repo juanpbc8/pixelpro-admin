@@ -1,6 +1,7 @@
 import { Component, ChangeDetectionStrategy, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { AuthService } from '../../auth/auth.service';
+import { AlertService } from '../../../shared/services/alert.service';
 
 @Component({
     selector: 'app-header',
@@ -14,11 +15,18 @@ import { AuthService } from '../../auth/auth.service';
 })
 export class HeaderComponent {
     private readonly authService = inject(AuthService);
+    private readonly alertService = inject(AlertService);
 
     readonly currentUser = this.authService.currentUser;
 
-    onLogout(): void {
-        if (confirm('¿Estás seguro de que deseas cerrar sesión?')) {
+    async onLogout(): Promise<void> {
+        const confirmed = await this.alertService.confirm(
+            '¿Cerrar sesión?',
+            '¿Estás seguro de que deseas cerrar sesión?',
+            'Sí, cerrar sesión'
+        );
+
+        if (confirmed) {
             this.authService.logout().subscribe();
         }
     }

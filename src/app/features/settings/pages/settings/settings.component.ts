@@ -2,6 +2,7 @@ import { Component, ChangeDetectionStrategy, inject, signal, OnInit } from '@ang
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { SettingsService } from '../../services/settings.service';
+import { AlertService } from '../../../../shared/services/alert.service';
 
 @Component({
     selector: 'app-settings',
@@ -13,6 +14,7 @@ import { SettingsService } from '../../services/settings.service';
 export class SettingsComponent implements OnInit {
     private fb = inject(FormBuilder);
     private settingsService = inject(SettingsService);
+    private alertService = inject(AlertService);
 
     readonly settings = this.settingsService.settings;
     readonly loading = this.settingsService.loading;
@@ -71,23 +73,45 @@ export class SettingsComponent implements OnInit {
         const formValue = this.settingsForm.value;
         this.settingsService.updateSettings(formValue).subscribe({
             next: () => {
+                this.alertService.success(
+                    'Configuración guardada',
+                    'Los cambios han sido guardados exitosamente.'
+                );
                 this.showSuccessMessage();
             },
             error: (error: Error) => {
                 console.error('Error updating settings:', error);
+                this.alertService.error(
+                    'Error al guardar',
+                    'No se pudo guardar la configuración.'
+                );
             }
         });
     }
 
-    onResetToDefaults(): void {
-        if (confirm('¿Estás seguro de que deseas restablecer la configuración a los valores predeterminados?')) {
+    async onResetToDefaults(): Promise<void> {
+        const confirmed = await this.alertService.confirm(
+            '¿Restablecer configuración?',
+            '¿Estás seguro de que deseas restablecer la configuración a los valores predeterminados?',
+            'Sí, restablecer'
+        );
+
+        if (confirmed) {
             this.settingsService.resetToDefaults().subscribe({
                 next: (settings) => {
                     this.settingsForm.patchValue(settings);
+                    this.alertService.success(
+                        'Configuración restablecida',
+                        'Los valores predeterminados han sido restaurados.'
+                    );
                     this.showSuccessMessage();
                 },
                 error: (error: Error) => {
                     console.error('Error resetting settings:', error);
+                    this.alertService.error(
+                        'Error al restablecer',
+                        'No se pudo restablecer la configuración.'
+                    );
                 }
             });
         }

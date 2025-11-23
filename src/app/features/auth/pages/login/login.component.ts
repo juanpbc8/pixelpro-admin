@@ -20,6 +20,7 @@ export class LoginComponent {
 
     readonly isSubmitting = signal<boolean>(false);
     readonly errorMessage = signal<string>('');
+    readonly showPassword = signal<boolean>(false);
 
     loginForm: FormGroup;
 
@@ -90,5 +91,9 @@ export class LoginComponent {
         }
 
         return '';
+    }
+
+    togglePasswordVisibility(): void {
+        this.showPassword.update(value => !value);
     }
 }

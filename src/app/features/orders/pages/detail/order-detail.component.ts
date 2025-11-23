@@ -5,6 +5,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { HttpErrorResponse } from '@angular/common/http';
 import { OrderService } from '../../services/order.service';
 import { Order, OrderStatus, DeliveryType } from '../../models/order.model';
+import { AlertService } from '../../../../shared/services/alert.service';
 
 @Component({
   selector: 'app-order-detail',
@@ -17,6 +18,7 @@ export class OrderDetailComponent implements OnInit {
   private readonly orderService = inject(OrderService);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
+  private readonly alertService = inject(AlertService);
 
   readonly order = signal<Order | null>(null);
   readonly loading = signal<boolean>(false);
@@ -65,14 +67,20 @@ export class OrderDetailComponent implements OnInit {
     this.showStatusDropdown.update(val => !val);
   }
 
-  changeStatus(): void {
+  async changeStatus(): Promise<void> {
     const currentOrder = this.order();
     if (!currentOrder || this.selectedStatus() === currentOrder.status) {
       this.showStatusDropdown.set(false);
       return;
     }
 
-    if (!confirm(`¿Está seguro de cambiar el estado a "${this.getStatusLabel(this.selectedStatus())}"?`)) {
+    const confirmed = await this.alertService.confirm(
+      'Cambiar estado de orden',
+      `¿Está seguro de cambiar el estado a "${this.getStatusLabel(this.selectedStatus())}"?`,
+      'Sí, cambiar'
+    );
+
+    if (!confirmed) {
       this.selectedStatus.set(currentOrder.status);
       this.showStatusDropdown.set(false);
       return;
@@ -84,13 +92,19 @@ export class OrderDetailComponent implements OnInit {
         this.order.set(updatedOrder);
         this.isUpdatingStatus.set(false);
         this.showStatusDropdown.set(false);
-        alert('Estado actualizado exitosamente');
+        this.alertService.success(
+          'Estado actualizado',
+          'El estado de la orden ha sido actualizado exitosamente.'
+        );
       },
       error: (err: HttpErrorResponse) => {
         console.error('Error updating status:', err);
         this.selectedStatus.set(currentOrder.status);
         this.isUpdatingStatus.set(false);
-        alert('Error al actualizar el estado: ' + (err.error?.message || 'Error desconocido'));
+        this.alertService.error(
+          'Error al actualizar estado',
+          err.error?.message || 'Error desconocido'
+        );
       }
     });
   }
