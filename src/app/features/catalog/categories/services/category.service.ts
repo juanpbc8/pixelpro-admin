@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { Category, CreateCategoryDto, UpdateCategoryDto } from '../models/category.model';
+import { Category, CreateCategoryDto, UpdateCategoryDto, Page, CategoryQueryParams } from '../models/category.model';
 import { environment } from '../../../../../environments/environment';
 
 @Injectable({
@@ -11,8 +11,31 @@ export class CategoryService {
     private readonly http = inject(HttpClient);
     private readonly baseUrl = `${environment.apiUrl}/api/admin/categories`;
 
-    getCategories(): Observable<Category[]> {
-        return this.http.get<Category[]>(this.baseUrl);
+    /**
+     * Obtiene la lista paginada de categorías
+     * @param params Parámetros de consulta (page, size, sort, parentId)
+     * @returns Observable con la página de categorías
+     */
+    getCategories(params: CategoryQueryParams = {}): Observable<Page<Category>> {
+        let httpParams = new HttpParams();
+
+        if (params.page !== undefined) {
+            httpParams = httpParams.set('page', params.page.toString());
+        }
+
+        if (params.size !== undefined) {
+            httpParams = httpParams.set('size', params.size.toString());
+        }
+
+        if (params.sort) {
+            httpParams = httpParams.set('sort', params.sort);
+        }
+
+        if (params.parentId !== undefined) {
+            httpParams = httpParams.set('parentId', params.parentId.toString());
+        }
+
+        return this.http.get<Page<Category>>(this.baseUrl, { params: httpParams });
     }
 
     getCategoryById(id: number): Observable<Category> {

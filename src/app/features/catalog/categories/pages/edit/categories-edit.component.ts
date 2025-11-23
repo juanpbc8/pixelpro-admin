@@ -65,9 +65,11 @@ export class CategoriesEditComponent implements OnInit {
     }
 
     loadParentCategories(): void {
-        this.categoryService.getCategories().subscribe({
-            next: (categories) => {
-                const filtered = categories.filter(c => c.id !== this.categoryId);
+        // Cargar un gran número de categorías para el dropdown
+        this.categoryService.getCategories({ page: 0, size: 100 }).subscribe({
+            next: (page) => {
+                // Usar page.content y filtrar la categoría actual
+                const filtered = page.content.filter(c => c.id !== this.categoryId);
                 this.parentCategories.set(filtered);
             },
             error: (err: HttpErrorResponse) => {

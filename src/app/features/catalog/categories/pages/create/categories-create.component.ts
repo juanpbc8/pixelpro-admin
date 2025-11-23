@@ -35,9 +35,10 @@ export class CategoriesCreateComponent implements OnInit {
     }
 
     loadParentCategories(): void {
-        this.categoryService.getCategories().subscribe({
-            next: (categories) => {
-                this.parentCategories.set(categories);
+        // Cargar un gran número de categorías para el dropdown
+        this.categoryService.getCategories({ page: 0, size: 100 }).subscribe({
+            next: (page) => {
+                this.parentCategories.set(page.content); // Usar page.content, no page directamente
             },
             error: (err: HttpErrorResponse) => {
                 console.error('Error loading categories:', err);

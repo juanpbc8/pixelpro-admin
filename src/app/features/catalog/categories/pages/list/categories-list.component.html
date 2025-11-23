@@ -13,15 +13,24 @@
 
   <div class="card border-0 shadow-sm">
     <div class="card-body">
-      <div class="row mb-3">
-        <div class="col-md-6">
-          <div class="input-group">
-            <span class="input-group-text bg-white">
-              <i class="bi bi-search"></i>
-            </span>
-            <input type="text" class="form-control" placeholder="Buscar por nombre..." [value]="searchTerm()"
-              (input)="onSearchChange($any($event.target).value)">
-          </div>
+      <!-- Filtros -->
+      <div class="row g-3 mb-3">
+        <div class="col-md-5">
+          <label for="filterParent" class="form-label">Filtrar por categoría padre</label>
+          <select id="filterParent" class="form-select" [value]="selectedParentId() ?? ''"
+            (change)="onParentCategoryChange($any($event.target).value)">
+            <option value="">Todas las categorías</option>
+            @for (category of allCategories(); track category.id) {
+            <option [value]="category.id">{{ category.name }}</option>
+            }
+          </select>
+        </div>
+        <div class="col-md-3 d-flex align-items-end">
+          @if (hasFilters()) {
+          <button type="button" class="btn btn-outline-secondary w-100" (click)="onResetFilters()">
+            <i class="bi bi-x-lg me-2"></i>Limpiar filtros
+          </button>
+          }
         </div>
       </div>
 
@@ -33,12 +42,12 @@
         <p class="text-muted mt-3">Cargando categorías...</p>
       </div>
       } @else {
-      @if (filteredCategories().length === 0) {
+      @if (categories().length === 0) {
       <div class="text-center py-5">
         <i class="bi bi-inbox fs-1 text-muted"></i>
         <p class="text-muted mt-3">
-          @if (searchTerm()) {
-          No se encontraron categorías que coincidan con "{{ searchTerm() }}"
+          @if (hasFilters()) {
+          No se encontraron categorías con los filtros aplicados
           } @else {
           No hay categorías registradas
           }
@@ -51,13 +60,12 @@
             <tr>
               <th>Nombre</th>
               <th>Categoría padre</th>
-              <th>Creada</th>
               <th>Actualizada</th>
               <th class="text-end">Acciones</th>
             </tr>
           </thead>
           <tbody>
-            @for (category of filteredCategories(); track category.id) {
+            @for (category of categories(); track category.id) {
             <tr>
               <td>
                 <strong>{{ category.name }}</strong>
@@ -70,9 +78,6 @@
                 } @else {
                 <span class="text-muted">Ninguna</span>
                 }
-              </td>
-              <td>
-                <small class="text-muted">{{ formatDate(category.createdAt) }}</small>
               </td>
               <td>
                 <small class="text-muted">{{ formatDate(category.updatedAt) }}</small>
@@ -90,12 +95,48 @@
         </table>
       </div>
 
-      <div class="mt-3">
+      <!-- Paginación -->
+      <div class="d-flex justify-content-between align-items-center mt-3">
         <p class="text-muted mb-0">
           <small>
-            Mostrando {{ filteredCategories().length }} de {{ categories().length }} categorías
+            Mostrando {{ categories().length }} de {{ totalElements() }} categorías
+            @if (totalPages() > 0) {
+            (Página {{ currentPage() + 1 }} de {{ totalPages() }})
+            }
           </small>
         </p>
+
+        @if (totalPages() > 1) {
+        <nav aria-label="Navegación de páginas">
+          <ul class="pagination mb-0">
+            <li class="page-item" [class.disabled]="isFirstPage()">
+              <button class="page-link" type="button" (click)="onPreviousPage()" [disabled]="isFirstPage()">
+                <i class="bi bi-chevron-left"></i> Anterior
+              </button>
+            </li>
+
+            @for (page of [].constructor(totalPages()); track $index) {
+            @if ($index === 0 || $index === totalPages() - 1 || ($index >= currentPage() - 1 && $index <= currentPage()
+              + 1)) { <li class="page-item" [class.active]="currentPage() === $index">
+              <button class="page-link" type="button" (click)="onPageChange($index)">
+                {{ $index + 1 }}
+              </button>
+              </li>
+              } @else if ($index === currentPage() - 2 || $index === currentPage() + 2) {
+              <li class="page-item disabled">
+                <span class="page-link">...</span>
+              </li>
+              }
+              }
+
+              <li class="page-item" [class.disabled]="isLastPage()">
+                <button class="page-link" type="button" (click)="onNextPage()" [disabled]="isLastPage()">
+                  Siguiente <i class="bi bi-chevron-right"></i>
+                </button>
+              </li>
+          </ul>
+        </nav>
+        }
       </div>
       }
       }
