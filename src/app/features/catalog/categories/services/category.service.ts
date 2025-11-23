@@ -1,7 +1,8 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { Category, CreateCategoryDto, UpdateCategoryDto, Page, CategoryQueryParams } from '../models/category.model';
+import { Category, CreateCategoryDto, UpdateCategoryDto, CategoryQueryParams } from '../models/category.model';
+import { Page } from '../../../../shared/models/page.model';
 import { environment } from '../../../../../environments/environment';
 
 @Injectable({

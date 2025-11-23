@@ -1,7 +1,8 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { Order, OrderQueryParams, OrderStatusUpdateDto, Page } from '../models/order.model';
+import { Order, OrderQueryParams, OrderStatusUpdateDto } from '../models/order.model';
+import { Page } from '../../../shared/models/page.model';
 import { environment } from '../../../../environments/environment';
 
 @Injectable({

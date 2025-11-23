@@ -1,3 +1,5 @@
+import { Page } from '../../../../shared/models/page.model';
+
 export interface Category {
     id: number;
     name: string;
@@ -21,16 +23,4 @@ export interface CategoryQueryParams {
     size?: number;
     sort?: string;
     parentId?: number;
-}
-
-export interface Page<T> {
-    content: T[];
-    totalElements: number;
-    totalPages: number;
-    size: number;
-    number: number;
-    numberOfElements: number;
-    first: boolean;
-    last: boolean;
-    empty: boolean;
 }

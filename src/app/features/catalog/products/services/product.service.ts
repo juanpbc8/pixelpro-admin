@@ -2,7 +2,8 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable, of } from 'rxjs';
 import { switchMap } from 'rxjs/operators';
-import { Product, CreateProductDto, UpdateProductDto, ProductQueryParams, Page } from '../models/product.model';
+import { Product, CreateProductDto, UpdateProductDto, ProductQueryParams } from '../models/product.model';
+import { Page } from '../../../../shared/models/page.model';
 import { environment } from '../../../../../environments/environment';
 import { UploadService } from '../../../../shared/services/upload.service';
 
