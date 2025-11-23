@@ -53,7 +53,7 @@
                   Precio <span class="text-danger">*</span>
                 </label>
                 <div class="input-group">
-                  <span class="input-group-text">$</span>
+                  <span class="input-group-text">S/</span>
                   <input type="number" class="form-control" id="price" formControlName="price"
                     [class.is-invalid]="isFieldInvalid('price')" step="0.01" min="0" placeholder="0.00">
                   @if (isFieldInvalid('price')) {
@@ -84,8 +84,8 @@
                   Estado <span class="text-danger">*</span>
                 </label>
                 <select class="form-select" id="status" formControlName="status">
-                  <option value="ACTIVE">Activo</option>
-                  <option value="INACTIVE">Inactivo</option>
+                  <option value="ACTIVO">Activo</option>
+                  <option value="INACTIVO">Inactivo</option>
                 </select>
               </div>
 

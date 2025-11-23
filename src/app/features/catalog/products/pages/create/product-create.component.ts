@@ -39,7 +39,7 @@ export class ProductCreateComponent implements OnInit {
             description: [''],
             price: [0, [Validators.required, Validators.min(0)]],
             qtyStock: [0, [Validators.required, Validators.min(0)]],
-            status: ['ACTIVE', Validators.required],
+            status: ['ACTIVO', Validators.required],
             categoryId: [null, Validators.required]
         });
     }
