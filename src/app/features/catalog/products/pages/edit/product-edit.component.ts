@@ -113,12 +113,23 @@ export class ProductEditComponent implements OnInit {
         const input = event.target as HTMLInputElement;
         if (input.files && input.files.length > 0) {
             const file = input.files[0];
+
+            // Validar que sea una imagen
+            if (!file.type.startsWith('image/')) {
+                this.errorMessage.set('Por favor selecciona un archivo de imagen válido');
+                return;
+            }
+
             this.selectedFile.set(file);
 
-            // Generar preview local de nueva imagen
+            // Generar preview local usando FileReader
             const reader = new FileReader();
-            reader.onload = (e) => {
-                this.imagePreview.set(e.target?.result as string);
+            reader.onload = (e: ProgressEvent<FileReader>) => {
+                const result = e.target?.result as string;
+                this.imagePreview.set(result);
+            };
+            reader.onerror = () => {
+                this.errorMessage.set('Error al leer la imagen seleccionada');
             };
             reader.readAsDataURL(file);
         }
@@ -128,9 +139,16 @@ export class ProductEditComponent implements OnInit {
         this.selectedFile.set(null);
         // Restaurar imagen original
         this.imagePreview.set(this.originalImageUrl());
+        // Limpiar el input file
+        const fileInput = document.getElementById('fileInput') as HTMLInputElement;
+        if (fileInput) {
+            fileInput.value = '';
+        }
     }
 
-
+    isDataUrl(url: string | null): boolean {
+        return url !== null && url.startsWith('data:');
+    }
 
     onSubmit(): void {
         if (this.productForm.invalid) {

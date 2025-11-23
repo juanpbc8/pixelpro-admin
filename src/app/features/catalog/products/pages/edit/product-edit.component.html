@@ -82,7 +82,7 @@
                   Precio <span class="text-danger">*</span>
                 </label>
                 <div class="input-group">
-                  <span class="input-group-text">$</span>
+                  <span class="input-group-text">S/</span>
                   <input type="number" class="form-control" id="price" formControlName="price"
                     [class.is-invalid]="isFieldInvalid('price')" step="0.01" min="0" placeholder="0.00">
                   @if (isFieldInvalid('price')) {
@@ -124,11 +124,16 @@
 
                 @if (imagePreview()) {
                 <div class="mb-3">
+                  <!-- Usar pipe imageUrl solo si NO es una data URL (base64) -->
+                  @if (isDataUrl(imagePreview())) {
+                  <img [src]="imagePreview()!" alt="Vista previa del producto" class="preview-img">
+                  } @else {
                   <img [src]="imagePreview()! | imageUrl" alt="Vista previa del producto" class="preview-img">
+                  }
 
                   @if (selectedFile()) {
                   <button type="button" class="btn btn-sm btn-outline-danger ms-3" (click)="removeNewImage()">
-                    <i class="bi bi-x-circle"></i> Cancelar nuevo cambio
+                    <i class="bi bi-x-circle"></i> Cancelar cambio
                   </button>
                   } @else {
                   <button type="button" class="btn btn-sm btn-outline-primary ms-3"
@@ -137,15 +142,24 @@
                   </button>
                   }
                 </div>
+                } @else {
+                <div class="mb-3 text-center py-4 border rounded bg-light">
+                  <i class="bi bi-image fs-1 text-muted"></i>
+                  <p class="text-muted mb-2">Sin imagen</p>
+                  <button type="button" class="btn btn-sm btn-outline-primary"
+                    onclick="document.getElementById('fileInput').click()">
+                    <i class="bi bi-upload"></i> Seleccionar imagen
+                  </button>
+                </div>
                 }
 
                 <input type="file" id="fileInput" class="d-none" accept="image/*" (change)="onImageSelected($event)">
 
                 <small class="text-muted">
                   @if (selectedFile()) {
-                  Nueva imagen seleccionada. Se subirá al guardar.
+                  <i class="bi bi-check-circle text-success"></i> Nueva imagen seleccionada. Se subirá al guardar.
                   } @else {
-                  Haz clic en "Cambiar imagen" para seleccionar una nueva foto.
+                  Formatos soportados: JPG, PNG, GIF, WebP (máx. 5MB)
                   }
                 </small>
               </div>
