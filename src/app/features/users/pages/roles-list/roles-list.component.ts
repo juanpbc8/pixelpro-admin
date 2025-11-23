@@ -24,13 +24,14 @@ export class RolesListComponent implements OnInit {
 
     loadRoles(): void {
         this.isLoading.set(true);
-        this.userService.getRoles().subscribe({
+        // Usar getStaffRoles() para excluir CLIENTE (cumple con la regla "Staff Only")
+        this.userService.getStaffRoles().subscribe({
             next: (roles) => {
                 this.roles.set(roles);
                 this.isLoading.set(false);
             },
             error: (err: HttpErrorResponse) => {
-                console.error('Error loading roles:', err);
+                console.error('Error loading staff roles:', err);
                 this.isLoading.set(false);
             }
         });

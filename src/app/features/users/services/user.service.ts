@@ -1,6 +1,6 @@
 import { inject, Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { Observable, map } from 'rxjs';
+import { Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 import { User, UserCreateRequest, UserUpdateRequest, UserQueryParams, Page } from '../models/user.model';
 
@@ -67,11 +67,10 @@ export class UserService {
     /**
      * Obtiene solo los roles de staff (excluye CLIENTE)
      * Este método es utilizado en el panel de administración para gestionar usuarios del staff
+     * Usa el endpoint especializado del backend: GET /api/admin/users/roles/staff
      */
     getStaffRoles(): Observable<string[]> {
-        return this.getRoles().pipe(
-            map(roles => roles.filter(role => role !== 'CLIENTE'))
-        );
+        return this.http.get<string[]>(`${this.baseUrl}/roles/staff`);
     }
 
     /**
@@ -86,6 +85,10 @@ export class UserService {
 
         if (filters.role) {
             params = params.set('role', filters.role);
+        }
+
+        if (filters.staffOnly !== undefined) {
+            params = params.set('staffOnly', filters.staffOnly.toString());
         }
 
         if (filters.page !== undefined) {

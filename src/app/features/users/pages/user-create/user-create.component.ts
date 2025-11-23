@@ -28,14 +28,14 @@ export class UserCreateComponent implements OnInit {
 
     ngOnInit(): void {
         this.initForm();
-        // Cargar solo roles de staff (excluye CLIENTE)
+        // Cargar solo roles de staff del backend (excluye CLIENTE automáticamente)
         this.userService.getStaffRoles().subscribe({
             next: (roles) => {
                 this.staffRoles.set(roles);
-                // Setear ADMIN como default si existe
-                const adminRole = roles.find(r => r === 'ADMIN');
-                if (adminRole) {
-                    this.userForm.patchValue({ role: adminRole });
+                // Setear ADMIN como default si existe, si no el primer rol disponible
+                const defaultRole = roles.find(r => r === 'ADMIN') || roles[0];
+                if (defaultRole) {
+                    this.userForm.patchValue({ role: defaultRole });
                 }
             },
             error: (err: HttpErrorResponse) => {

@@ -39,7 +39,7 @@ export class UsersListComponent implements OnInit {
         role: string;
     }>({
         search: '',
-        role: '' // Se setea al primer rol de staff en ngOnInit
+        role: '' // Vacío = "Todos los roles del Staff"
     });
 
     // Computed
@@ -47,26 +47,22 @@ export class UsersListComponent implements OnInit {
     readonly isLastPage = computed(() => this.currentPage() >= this.totalPages() - 1);
     readonly hasFilters = computed(() => {
         const f = this.filters();
-        const defaultRole = this.staffRoles().length > 0 ? this.staffRoles()[0] : '';
-        return f.search !== '' || f.role !== defaultRole;
+        return f.search !== '' || f.role !== '';
     });
 
     ngOnInit(): void {
-        // Primero cargar los roles de staff
+        // Cargar los roles de staff para el dropdown de filtros
         this.userService.getStaffRoles().subscribe({
             next: (roles) => {
                 this.staffRoles.set(roles);
-                // Setear el primer rol como filtro por defecto (usualmente ADMIN)
-                if (roles.length > 0) {
-                    this.filters.update(f => ({ ...f, role: roles[0] }));
-                }
-                // Luego cargar los usuarios
-                this.loadUsers();
             },
             error: (err: HttpErrorResponse) => {
                 console.error('Error loading staff roles:', err);
             }
         });
+
+        // Cargar usuarios (solo staff)
+        this.loadUsers();
 
         // Configurar búsqueda instantánea con debounce
         this.searchSubject.pipe(
@@ -100,6 +96,7 @@ export class UsersListComponent implements OnInit {
         this.isLoading.set(true);
         const f = this.filters();
         const params: UserQueryParams = {
+            staffOnly: true, // SIEMPRE excluir usuarios con rol CLIENTE
             page: this.currentPage(),
             size: this.pageSize(),
             ...(f.search && { search: f.search }),
@@ -137,10 +134,9 @@ export class UsersListComponent implements OnInit {
     }
 
     onResetFilters(): void {
-        const defaultRole = this.staffRoles().length > 0 ? this.staffRoles()[0] : '';
         this.filters.set({
             search: '',
-            role: defaultRole
+            role: '' // Vacío = "Todos los roles del Staff"
         });
         const searchInput = document.getElementById('filterSearch') as HTMLInputElement;
         if (searchInput) searchInput.value = '';

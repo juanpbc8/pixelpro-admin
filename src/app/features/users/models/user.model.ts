@@ -22,6 +22,7 @@ export interface UserUpdateRequest {
 export interface UserQueryParams {
     search?: string;
     role?: string;
+    staffOnly?: boolean;
     page?: number;
     size?: number;
     sort?: string;

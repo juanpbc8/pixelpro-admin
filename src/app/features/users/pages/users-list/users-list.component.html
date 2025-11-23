@@ -31,7 +31,7 @@
         <div class="col-md-4">
           <label for="filterRole" class="form-label">Rol</label>
           <select id="filterRole" class="form-select" [value]="filters().role" (change)="onRoleChange($event)">
-            <option value="">Todos los roles</option>
+            <option value="">Todos los roles del Staff</option>
             @for (role of staffRoles(); track role) {
             <option [value]="role">{{ role }}</option>
             }
