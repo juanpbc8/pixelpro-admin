@@ -4,7 +4,7 @@ import { Observable, of } from 'rxjs';
 import { switchMap } from 'rxjs/operators';
 import { Product, CreateProductDto, UpdateProductDto, ProductQueryParams, Page } from '../models/product.model';
 import { environment } from '../../../../../environments/environment';
-import { UploadService } from '../../../common/services/upload.service';
+import { UploadService } from '../../../../shared/services/upload.service';
 
 @Injectable({
     providedIn: 'root'

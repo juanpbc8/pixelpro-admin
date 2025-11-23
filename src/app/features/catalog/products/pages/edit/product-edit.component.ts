@@ -7,7 +7,7 @@ import { Product, UpdateProductDto } from '../../models/product.model';
 import { Category } from '../../../categories/models/category.model';
 import { ProductService } from '../../services/product.service';
 import { CategoryService } from '../../../categories/services/category.service';
-import { UploadService } from '../../../../common/services/upload.service';
+import { UploadService } from '../../../../../shared/services/upload.service';
 import { ImageUrlPipe } from '../../../../../shared/pipes/image-url.pipe';
 
 @Component({
