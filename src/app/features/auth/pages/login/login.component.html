@@ -1,78 +1,111 @@
-<div class="login-container">
-  <div class="login-card">
-    <div class="login-header">
-      <h1 class="login-title">Pixelpro Admin</h1>
-      <p class="login-subtitle">Ingresa tus credenciales para acceder al panel administrativo</p>
+<div class="container-fluid p-0 min-vh-100">
+  <div class="row g-0 h-100">
+    <!-- Left Panel - Dark Branding (Hidden on mobile) -->
+    <div class="col-lg-6 d-none d-lg-flex flex-column justify-content-between p-5 brand-panel-dark">
+      <!-- Center Content -->
+      <div class="d-flex align-items-center justify-content-center flex-grow-1">
+        <div class="text-center brand-center-content">
+          <!-- Logo + Brand Name Row -->
+          <div class="d-flex align-items-center justify-content-center mb-4">
+            <img src="/assets/logo.webp" alt="PixelPro Logo" class="brand-logo-dark" />
+            <span class="ms-3 h2 text-white fw-bold mb-0">PixelPro</span>
+          </div>
+
+          <!-- Hero Text -->
+          <div class="brand-hero-section">
+            <h1 class="hero-title-dark">Panel de Administración</h1>
+            <p class="hero-subtitle-dark">
+              Optimiza tu inventario y ventas en tiempo real con la plataforma administrativa integral
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Bottom - Copyright -->
+      <div class="brand-footer-section">
+        <p class="copyright-text">
+          &copy; 2025 PixelPro. Todos los derechos reservados.
+        </p>
+      </div>
     </div>
 
-    <div class="login-body">
-      @if (errorMessage()) {
-      <div class="alert alert-danger" role="alert">
-        <i class="bi bi-exclamation-triangle-fill me-2"></i>
-        {{ errorMessage() }}
-      </div>
-      }
+    <!-- Right Panel - Gradient with Floating Card -->
+    <div class="col-lg-6 d-flex align-items-center justify-content-center gradient-panel p-4">
+      <!-- Floating White Card -->
+      <div class="bg-white p-5 rounded-4 shadow-lg login-card">
+        <!-- Mobile Logo (Only visible on mobile) -->
+        <div class="text-center mb-4 d-lg-none">
+          <img src="/assets/logo.webp" alt="PixelPro Logo" class="mobile-logo" />
+        </div>
 
-      <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
-        <!-- Email -->
-        <div class="mb-3">
-          <label for="email" class="form-label">Correo electrónico</label>
-          <div class="input-group">
-            <span class="input-group-text">
-              <i class="bi bi-envelope"></i>
-            </span>
-            <input type="email" class="form-control" id="email" formControlName="email"
+        <!-- Welcome Header -->
+        <div class="mb-4">
+          <h2 class="welcome-title">Bienvenido de nuevo</h2>
+          <p class="welcome-subtitle text-muted">Ingresa tus credenciales para continuar</p>
+        </div>
+
+        <!-- Error Alert -->
+        @if (errorMessage()) {
+        <div class="alert alert-danger d-flex align-items-center" role="alert">
+          <i class="bi bi-exclamation-triangle-fill me-2"></i>
+          <div>{{ errorMessage() }}</div>
+        </div>
+        }
+
+        <!-- Login Form -->
+        <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
+          <!-- Email -->
+          <div class="mb-3">
+            <label for="email" class="form-label">Correo electrónico</label>
+            <input type="email" class="form-control form-control-lg" id="email" formControlName="email"
               [class.is-invalid]="loginForm.get('email')?.invalid && loginForm.get('email')?.touched"
               placeholder="admin@pixelpro.com" autocomplete="email" />
+            @if (getErrorMessage('email')) {
+            <div class="invalid-feedback d-block">
+              {{ getErrorMessage('email') }}
+            </div>
+            }
           </div>
-          @if (getErrorMessage('email')) {
-          <div class="invalid-feedback d-block">
-            {{ getErrorMessage('email') }}
+
+          <!-- Password -->
+          <div class="mb-4">
+            <label for="password" class="form-label">Contraseña</label>
+            <div class="password-wrapper">
+              <input [type]="showPassword() ? 'text' : 'password'" class="form-control form-control-lg" id="password"
+                formControlName="password"
+                [class.is-invalid]="loginForm.get('password')?.invalid && loginForm.get('password')?.touched"
+                placeholder="Mínimo 8 caracteres" autocomplete="current-password" />
+              <button class="password-toggle-btn" type="button" (click)="togglePasswordVisibility()"
+                [attr.aria-label]="showPassword() ? 'Ocultar contraseña' : 'Mostrar contraseña'">
+                <i class="bi" [class.bi-eye-slash]="showPassword()" [class.bi-eye]="!showPassword()"></i>
+              </button>
+            </div>
+            @if (getErrorMessage('password')) {
+            <div class="invalid-feedback d-block">
+              {{ getErrorMessage('password') }}
+            </div>
+            }
           </div>
-          }
+
+          <!-- Submit Button -->
+          <button type="submit" class="btn btn-primary btn-lg w-100" [disabled]="loginForm.invalid || isSubmitting()">
+            @if (isSubmitting()) {
+            <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+            Iniciando sesión...
+            } @else {
+            Iniciar sesión
+            }
+          </button>
+        </form>
+
+        <!-- Mobile Footer -->
+        <div class="text-center mt-4 d-lg-none">
+          <p class="text-muted small mb-0">
+            &copy; 2025 PixelPro. Todos los derechos reservados.
+          </p>
         </div>
-
-        <!-- Password -->
-        <div class="mb-4">
-          <label for="password" class="form-label">Contraseña</label>
-          <div class="input-group">
-            <span class="input-group-text">
-              <i class="bi bi-lock"></i>
-            </span>
-            <input [type]="showPassword() ? 'text' : 'password'" class="form-control" id="password"
-              formControlName="password"
-              [class.is-invalid]="loginForm.get('password')?.invalid && loginForm.get('password')?.touched"
-              placeholder="Mínimo 8 caracteres" autocomplete="current-password" />
-            <button class="btn btn-outline-secondary" type="button" (click)="togglePasswordVisibility()"
-              [attr.aria-label]="showPassword() ? 'Ocultar contraseña' : 'Mostrar contraseña'">
-              <i class="bi" [class.bi-eye-slash]="showPassword()" [class.bi-eye]="!showPassword()"></i>
-            </button>
-          </div>
-          @if (getErrorMessage('password')) {
-          <div class="invalid-feedback d-block">
-            {{ getErrorMessage('password') }}
-          </div>
-          }
-        </div>
-
-        <!-- Submit Button -->
-        <button type="submit" class="btn btn-primary w-100" [disabled]="loginForm.invalid || isSubmitting()">
-          @if (isSubmitting()) {
-          <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-          Iniciando sesión...
-          } @else {
-          <i class="bi bi-box-arrow-in-right me-2"></i>
-          Iniciar sesión
-          }
-        </button>
-      </form>
-    </div>
-
-    <div class="login-footer">
-      <p class="text-muted mb-0">
-        <i class="bi bi-shield-lock me-1"></i>
-        Panel exclusivo para administradores
-      </p>
+      </div>
+      <!-- End Floating Card -->
     </div>
   </div>
 </div>
