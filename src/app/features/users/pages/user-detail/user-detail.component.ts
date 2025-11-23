@@ -1,7 +1,9 @@
 import { Component, ChangeDetectionStrategy, inject, signal, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { HttpErrorResponse } from '@angular/common/http';
 import { UserService } from '../../services/user.service';
+import { User } from '../../models/user.model';
 
 @Component({
     selector: 'app-user-detail',
@@ -15,8 +17,8 @@ export class UserDetailComponent implements OnInit {
     private route = inject(ActivatedRoute);
     private router = inject(Router);
 
-    readonly user = this.userService.selectedUser;
-    readonly loading = this.userService.loading;
+    readonly user = signal<User | null>(null);
+    readonly isLoading = signal<boolean>(true);
     readonly notFound = signal<boolean>(false);
 
     ngOnInit(): void {
@@ -24,6 +26,7 @@ export class UserDetailComponent implements OnInit {
 
         if (!idParam) {
             this.notFound.set(true);
+            this.isLoading.set(false);
             return;
         }
 
@@ -31,29 +34,44 @@ export class UserDetailComponent implements OnInit {
 
         if (isNaN(id)) {
             this.notFound.set(true);
+            this.isLoading.set(false);
             return;
         }
 
-        this.userService.loadUser(id);
+        this.loadUser(id);
+    }
 
-        setTimeout(() => {
-            if (!this.user() && !this.loading()) {
+    private loadUser(id: number): void {
+        this.isLoading.set(true);
+        this.userService.getUserById(id).subscribe({
+            next: (user) => {
+                this.user.set(user);
+                this.isLoading.set(false);
+            },
+            error: (err: HttpErrorResponse) => {
+                console.error('Error loading user:', err);
                 this.notFound.set(true);
+                this.isLoading.set(false);
             }
-        }, 500);
+        });
     }
 
     goBack(): void {
         this.router.navigate(['/users']);
     }
 
-    formatDate(date: string): string {
+    formatDate(dateString?: string | null): string {
+        if (!dateString) return '-';
+
+        const date = new Date(dateString);
+        if (isNaN(date.getTime())) return '-';
+
         return new Intl.DateTimeFormat('es-PE', {
             year: 'numeric',
             month: 'long',
             day: 'numeric',
             hour: '2-digit',
             minute: '2-digit'
-        }).format(new Date(date));
+        }).format(date);
     }
 }

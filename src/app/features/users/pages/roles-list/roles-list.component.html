@@ -15,26 +15,33 @@
 
   <div class="card">
     <div class="card-body">
+      @if (isLoading()) {
+      <div class="text-center py-5">
+        <div class="spinner-border text-primary" role="status">
+          <span class="visually-hidden">Cargando...</span>
+        </div>
+        <p class="text-muted mt-3">Cargando roles...</p>
+      </div>
+      } @else {
       <div class="table-responsive">
         <table class="table table-hover align-middle">
           <thead>
             <tr>
               <th>Nombre del rol</th>
-              <th>Descripción</th>
             </tr>
           </thead>
           <tbody>
-            @for (role of roles(); track role.id) {
+            @for (role of roles(); track role) {
             <tr>
               <td>
-                <span class="badge bg-info">{{ role.name }}</span>
+                <span class="badge bg-info">{{ role }}</span>
               </td>
-              <td>{{ role.description || 'Sin descripción' }}</td>
             </tr>
             }
           </tbody>
         </table>
       </div>
+      }
     </div>
   </div>
 </div>

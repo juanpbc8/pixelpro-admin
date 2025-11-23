@@ -1,8 +1,10 @@
-import { Component, ChangeDetectionStrategy, inject, OnInit } from '@angular/core';
+import { Component, ChangeDetectionStrategy, inject, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, AbstractControl, ValidationErrors } from '@angular/forms';
 import { Router } from '@angular/router';
+import { HttpErrorResponse } from '@angular/common/http';
 import { UserService } from '../../services/user.service';
+import { UserCreateRequest } from '../../models/user.model';
 
 @Component({
     selector: 'app-user-create',
@@ -12,16 +14,30 @@ import { UserService } from '../../services/user.service';
     imports: [CommonModule, ReactiveFormsModule]
 })
 export class UserCreateComponent implements OnInit {
-    private fb = inject(FormBuilder);
-    private userService = inject(UserService);
-    private router = inject(Router);
+    private readonly fb = inject(FormBuilder);
+    private readonly userService = inject(UserService);
+    private readonly router = inject(Router);
 
-    readonly roles = this.userService.roles;
+    readonly staffRoles = signal<string[]>([]);
+    readonly isSubmitting = signal<boolean>(false);
     userForm!: FormGroup;
 
     ngOnInit(): void {
-        this.userService.getRoles().subscribe();
         this.initForm();
+        // Cargar solo roles de staff (excluye CLIENTE)
+        this.userService.getStaffRoles().subscribe({
+            next: (roles) => {
+                this.staffRoles.set(roles);
+                // Setear ADMIN como default si existe
+                const adminRole = roles.find(r => r === 'ADMIN');
+                if (adminRole) {
+                    this.userForm.patchValue({ role: adminRole });
+                }
+            },
+            error: (err: HttpErrorResponse) => {
+                console.error('Error loading staff roles:', err);
+            }
+        });
     }
 
     private initForm(): void {
@@ -29,8 +45,7 @@ export class UserCreateComponent implements OnInit {
             email: ['', [Validators.required, Validators.email]],
             password: ['', [Validators.required, Validators.minLength(8)]],
             confirmPassword: ['', [Validators.required]],
-            roleId: ['', [Validators.required]],
-            enabled: [true]
+            role: ['', [Validators.required]]
         }, {
             validators: this.passwordMatchValidator
         });
@@ -53,17 +68,22 @@ export class UserCreateComponent implements OnInit {
             return;
         }
 
+        this.isSubmitting.set(true);
         const formValue = this.userForm.value;
-        this.userService.createUser(
-            formValue.email,
-            formValue.password,
-            parseInt(formValue.roleId, 10)
-        ).subscribe({
+        const request: UserCreateRequest = {
+            email: formValue.email,
+            password: formValue.password,
+            role: formValue.role
+        };
+
+        this.userService.createUser(request).subscribe({
             next: () => {
                 this.router.navigate(['/users']);
             },
-            error: (error: Error) => {
-                console.error('Error creating user:', error);
+            error: (err: HttpErrorResponse) => {
+                console.error('Error creating user:', err);
+                this.isSubmitting.set(false);
+                alert('Error al crear el usuario. Por favor, intente nuevamente.');
             }
         });
     }
@@ -80,10 +100,10 @@ export class UserCreateComponent implements OnInit {
         }
 
         if (control.errors['required']) {
-            if (fieldName === 'email') return 'El correo es obligatorio.';
+            if (fieldName === 'email') return 'El correo electrónico es obligatorio.';
             if (fieldName === 'password') return 'La contraseña es obligatoria.';
             if (fieldName === 'confirmPassword') return 'Debe confirmar la contraseña.';
-            if (fieldName === 'roleId') return 'Debe seleccionar un rol.';
+            if (fieldName === 'role') return 'Debe seleccionar un rol.';
         }
 
         if (fieldName === 'email' && control.errors['email']) {

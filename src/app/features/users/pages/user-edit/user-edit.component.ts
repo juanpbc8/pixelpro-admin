@@ -2,7 +2,9 @@ import { Component, ChangeDetectionStrategy, inject, signal, OnInit } from '@ang
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, AbstractControl, ValidationErrors } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
+import { HttpErrorResponse } from '@angular/common/http';
 import { UserService } from '../../services/user.service';
+import { User, UserUpdateRequest } from '../../models/user.model';
 
 @Component({
     selector: 'app-user-edit',
@@ -17,11 +19,12 @@ export class UserEditComponent implements OnInit {
     private route = inject(ActivatedRoute);
     private router = inject(Router);
 
-    readonly user = this.userService.selectedUser;
-    readonly loading = this.userService.loading;
-    readonly roles = this.userService.roles;
+    readonly user = signal<User | null>(null);
+    readonly isLoading = signal<boolean>(true);
+    readonly staffRoles = signal<string[]>([]);
     readonly notFound = signal<boolean>(false);
     readonly passwordResetSuccess = signal<boolean>(false);
+    readonly isSubmitting = signal<boolean>(false);
 
     userForm!: FormGroup;
     passwordForm!: FormGroup;
@@ -32,6 +35,7 @@ export class UserEditComponent implements OnInit {
 
         if (!idParam) {
             this.notFound.set(true);
+            this.isLoading.set(false);
             return;
         }
 
@@ -39,26 +43,46 @@ export class UserEditComponent implements OnInit {
 
         if (isNaN(this.userId)) {
             this.notFound.set(true);
+            this.isLoading.set(false);
             return;
         }
 
         this.initForms();
-        this.userService.getRoles().subscribe();
-        this.userService.loadUser(this.userId);
+        this.loadStaffRoles();
+        this.loadUser();
+    }
 
-        setTimeout(() => {
-            if (!this.user() && !this.loading()) {
-                this.notFound.set(true);
-            } else if (this.user()) {
-                this.updateFormsWithUserData();
+    private loadStaffRoles(): void {
+        this.userService.getStaffRoles().subscribe({
+            next: (roles) => {
+                this.staffRoles.set(roles);
+            },
+            error: (err: HttpErrorResponse) => {
+                console.error('Error loading staff roles:', err);
             }
-        }, 500);
+        });
+    }
+
+    private loadUser(): void {
+        this.isLoading.set(true);
+        this.userService.getUserById(this.userId).subscribe({
+            next: (user) => {
+                this.user.set(user);
+                this.updateFormsWithUserData();
+                this.isLoading.set(false);
+            },
+            error: (err: HttpErrorResponse) => {
+                console.error('Error loading user:', err);
+                this.notFound.set(true);
+                this.isLoading.set(false);
+            }
+        });
     }
 
     private initForms(): void {
         this.userForm = this.fb.group({
             email: [{ value: '', disabled: true }],
-            roleId: ['', [Validators.required]],
+            role: ['', [Validators.required]],
             enabled: [true]
         });
 
@@ -77,7 +101,7 @@ export class UserEditComponent implements OnInit {
 
         this.userForm.patchValue({
             email: currentUser.email,
-            roleId: currentUser.role.id.toString(),
+            role: currentUser.roleName,
             enabled: currentUser.enabled
         });
     }
@@ -99,16 +123,25 @@ export class UserEditComponent implements OnInit {
             return;
         }
 
+        this.isSubmitting.set(true);
+        const currentUser = this.user();
+        if (!currentUser) return;
+
         const formValue = this.userForm.value;
-        this.userService.updateUser(this.userId, {
-            enabled: formValue.enabled,
-            roleId: parseInt(formValue.roleId, 10)
-        }).subscribe({
+        const request: UserUpdateRequest = {
+            email: currentUser.email, // Email del usuario actual (readonly en el form)
+            role: formValue.role,
+            enabled: formValue.enabled
+        };
+
+        this.userService.updateUser(this.userId, request).subscribe({
             next: () => {
                 this.router.navigate(['/users']);
             },
-            error: (error: Error) => {
-                console.error('Error updating user:', error);
+            error: (err: HttpErrorResponse) => {
+                console.error('Error updating user:', err);
+                alert('Error al actualizar el usuario. Por favor, intente nuevamente.');
+                this.isSubmitting.set(false);
             }
         });
     }
@@ -128,8 +161,9 @@ export class UserEditComponent implements OnInit {
                     this.passwordResetSuccess.set(false);
                 }, 3000);
             },
-            error: (error: Error) => {
-                console.error('Error resetting password:', error);
+            error: (err: HttpErrorResponse) => {
+                console.error('Error resetting password:', err);
+                alert('Error al restablecer la contraseña. Por favor, intente nuevamente.');
             }
         });
     }
@@ -150,7 +184,7 @@ export class UserEditComponent implements OnInit {
         }
 
         if (control.errors['required']) {
-            if (fieldName === 'roleId') return 'Debe seleccionar un rol.';
+            if (fieldName === 'role') return 'Debe seleccionar un rol.';
             if (fieldName === 'newPassword') return 'La contraseña es obligatoria.';
             if (fieldName === 'confirmNewPassword') return 'Debe confirmar la contraseña.';
         }

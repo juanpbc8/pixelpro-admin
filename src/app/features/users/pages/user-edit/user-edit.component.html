@@ -1,5 +1,5 @@
 <div class="container-fluid">
-  @if (loading()) {
+  @if (isLoading()) {
   <div class="text-center py-5">
     <div class="spinner-border text-primary" role="status">
       <span class="visually-hidden">Cargando usuario...</span>
@@ -39,17 +39,20 @@
 
             <!-- Role -->
             <div class="mb-3">
-              <label for="roleId" class="form-label">Rol</label>
-              <select class="form-select" id="roleId" formControlName="roleId"
-                [class.is-invalid]="userForm.get('roleId')?.invalid && userForm.get('roleId')?.touched">
+              <label for="role" class="form-label">Rol de staff</label>
+              <select class="form-select" id="role" formControlName="role"
+                [class.is-invalid]="userForm.get('role')?.invalid && userForm.get('role')?.touched">
                 <option value="">Seleccione un rol</option>
-                @for (role of roles(); track role.id) {
-                <option [value]="role.id">{{ role.name }} - {{ role.description }}</option>
+                @for (role of staffRoles(); track role) {
+                <option [value]="role">{{ role }}</option>
                 }
               </select>
-              @if (getErrorMessage('roleId', userForm)) {
+              <div class="form-text">
+                <i class="bi bi-info-circle"></i> Solo roles de administración disponibles
+              </div>
+              @if (getErrorMessage('role', userForm)) {
               <div class="invalid-feedback d-block">
-                {{ getErrorMessage('roleId', userForm) }}
+                {{ getErrorMessage('role', userForm) }}
               </div>
               }
             </div>
@@ -66,10 +69,16 @@
 
             <!-- Buttons -->
             <div class="d-flex gap-2">
-              <button type="submit" class="btn btn-primary">
+              <button type="submit" class="btn btn-primary" [disabled]="userForm.invalid || isSubmitting()">
+                @if (isSubmitting()) {
+                <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                Guardando...
+                } @else {
+                <i class="bi bi-save me-2"></i>
                 Guardar cambios
+                }
               </button>
-              <button type="button" class="btn btn-secondary" (click)="onCancel()">
+              <button type="button" class="btn btn-secondary" (click)="onCancel()" [disabled]="isSubmitting()">
                 Cancelar
               </button>
             </div>

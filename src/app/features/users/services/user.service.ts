@@ -1,200 +1,105 @@
-import { Injectable, signal } from '@angular/core';
-import { Observable, of, delay } from 'rxjs';
-import { User } from '../models/user.model';
-import { Role } from '../models/role.model';
+import { inject, Injectable } from '@angular/core';
+import { HttpClient, HttpParams } from '@angular/common/http';
+import { Observable, map } from 'rxjs';
+import { environment } from '../../../../environments/environment';
+import { User, UserCreateRequest, UserUpdateRequest, UserQueryParams, Page } from '../models/user.model';
 
 @Injectable({
     providedIn: 'root'
 })
 export class UserService {
-    readonly users = signal<User[]>([]);
-    readonly roles = signal<Role[]>([]);
-    readonly selectedUser = signal<User | null>(null);
-    readonly loading = signal<boolean>(false);
+    private readonly http = inject(HttpClient);
+    private readonly baseUrl = `${environment.apiUrl}/api/admin/users`;
 
-    constructor() {
-        this.initializeMockData();
+    /**
+     * Obtiene la lista de usuarios con filtros y paginación
+     */
+    getUsers(params: UserQueryParams): Observable<Page<User>> {
+        const httpParams = this.buildQueryParams(params);
+        return this.http.get<Page<User>>(this.baseUrl, { params: httpParams });
     }
 
-    private initializeMockData(): void {
-        const mockRoles: Role[] = [
-            {
-                id: 1,
-                name: 'ADMIN',
-                description: 'Administrador con acceso completo al sistema'
-            },
-            {
-                id: 2,
-                name: 'MANAGER',
-                description: 'Gestor con permisos para administrar contenido y usuarios'
-            },
-            {
-                id: 3,
-                name: 'OPERATOR',
-                description: 'Operador con acceso limitado a operaciones básicas'
-            }
-        ];
-
-        this.roles.set(mockRoles);
-
-        const mockUsers: User[] = [
-            {
-                id: 1,
-                email: 'admin@pixelpro.com',
-                enabled: true,
-                role: mockRoles[0],
-                createdAt: '2024-01-10T08:00:00Z',
-                updatedAt: '2024-11-15T10:30:00Z'
-            },
-            {
-                id: 2,
-                email: 'juan.perez@pixelpro.com',
-                enabled: true,
-                role: mockRoles[1],
-                createdAt: '2024-02-15T09:20:00Z',
-                updatedAt: '2024-10-20T14:15:00Z'
-            },
-            {
-                id: 3,
-                email: 'maria.gonzalez@pixelpro.com',
-                enabled: true,
-                role: mockRoles[1],
-                createdAt: '2024-03-20T11:30:00Z',
-                updatedAt: '2024-11-01T16:45:00Z'
-            },
-            {
-                id: 4,
-                email: 'carlos.lopez@pixelpro.com',
-                enabled: false,
-                role: mockRoles[2],
-                createdAt: '2024-04-05T13:10:00Z',
-                updatedAt: '2024-09-18T09:20:00Z'
-            },
-            {
-                id: 5,
-                email: 'ana.martinez@pixelpro.com',
-                enabled: true,
-                role: mockRoles[2],
-                createdAt: '2024-05-12T10:00:00Z',
-                updatedAt: '2024-11-10T11:30:00Z'
-            },
-            {
-                id: 6,
-                email: 'luis.torres@pixelpro.com',
-                enabled: true,
-                role: mockRoles[1],
-                createdAt: '2024-06-18T14:25:00Z',
-                updatedAt: '2024-11-12T15:20:00Z'
-            },
-            {
-                id: 7,
-                email: 'sofia.ramirez@pixelpro.com',
-                enabled: false,
-                role: mockRoles[2],
-                createdAt: '2024-07-22T09:40:00Z',
-                updatedAt: '2024-08-30T10:15:00Z'
-            },
-            {
-                id: 8,
-                email: 'roberto.silva@pixelpro.com',
-                enabled: true,
-                role: mockRoles[0],
-                createdAt: '2024-08-15T16:30:00Z',
-                updatedAt: '2024-11-14T13:45:00Z'
-            }
-        ];
-
-        this.users.set(mockUsers);
+    /**
+     * Obtiene un usuario por su ID
+     */
+    getUserById(id: number): Observable<User> {
+        return this.http.get<User>(`${this.baseUrl}/${id}`);
     }
 
-    getUsers(): Observable<User[]> {
-        return of(this.users()).pipe(delay(300));
+    /**
+     * Crea un nuevo usuario
+     */
+    createUser(request: UserCreateRequest): Observable<User> {
+        return this.http.post<User>(this.baseUrl, request);
     }
 
-    getUserById(id: number): Observable<User | undefined> {
-        const user = this.users().find(u => u.id === id);
-        return of(user).pipe(delay(300));
+    /**
+     * Actualiza un usuario existente
+     */
+    updateUser(id: number, request: UserUpdateRequest): Observable<User> {
+        return this.http.put<User>(`${this.baseUrl}/${id}`, request);
     }
 
-    loadUser(id: number): void {
-        this.loading.set(true);
-        this.getUserById(id).subscribe({
-            next: (user) => {
-                this.selectedUser.set(user || null);
-                this.loading.set(false);
-            },
-            error: (error: Error) => {
-                console.error('Error loading user:', error);
-                this.selectedUser.set(null);
-                this.loading.set(false);
-            }
-        });
+    /**
+     * Alterna el estado de activación del usuario (toggle)
+     * Cambia entre activo/inactivo automáticamente
+     */
+    toggleUserStatus(id: number): Observable<User> {
+        return this.http.patch<User>(`${this.baseUrl}/${id}/toggle-status`, {});
     }
 
-    createUser(email: string, password: string, roleId: number): Observable<User> {
-        const role = this.roles().find(r => r.id === roleId);
+    /**
+     * Actualiza la contraseña de un usuario
+     * Usa PATCH /api/admin/users/{id}/password con PasswordUpdateDto
+     */
+    resetPassword(id: number, password: string): Observable<void> {
+        return this.http.patch<void>(`${this.baseUrl}/${id}/password`, { password });
+    }
 
-        if (!role) {
-            throw new Error('Role not found');
+    /**
+     * Obtiene todos los roles disponibles del sistema
+     * El backend devuelve un array de strings con los nombres de los roles
+     */
+    getRoles(): Observable<string[]> {
+        return this.http.get<string[]>(`${this.baseUrl}/roles`);
+    }
+
+    /**
+     * Obtiene solo los roles de staff (excluye CLIENTE)
+     * Este método es utilizado en el panel de administración para gestionar usuarios del staff
+     */
+    getStaffRoles(): Observable<string[]> {
+        return this.getRoles().pipe(
+            map(roles => roles.filter(role => role !== 'CLIENTE'))
+        );
+    }
+
+    /**
+     * Construye los parámetros HTTP para las consultas
+     */
+    private buildQueryParams(filters: UserQueryParams): HttpParams {
+        let params = new HttpParams();
+
+        if (filters.search) {
+            params = params.set('search', filters.search);
         }
 
-        const newUser: User = {
-            id: Math.max(...this.users().map(u => u.id), 0) + 1,
-            email,
-            enabled: true,
-            role,
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString()
-        };
-
-        this.users.update(users => [...users, newUser]);
-
-        console.log('User created with password:', password);
-
-        return of(newUser).pipe(delay(300));
-    }
-
-    updateUser(id: number, changes: { enabled?: boolean; roleId?: number }): Observable<User | undefined> {
-        const index = this.users().findIndex(u => u.id === id);
-
-        if (index === -1) {
-            return of(undefined).pipe(delay(300));
+        if (filters.role) {
+            params = params.set('role', filters.role);
         }
 
-        const currentUser = this.users()[index];
-        let updatedUser = { ...currentUser, updatedAt: new Date().toISOString() };
-
-        if (changes.enabled !== undefined) {
-            updatedUser = { ...updatedUser, enabled: changes.enabled };
+        if (filters.page !== undefined) {
+            params = params.set('page', filters.page.toString());
         }
 
-        if (changes.roleId !== undefined) {
-            const role = this.roles().find(r => r.id === changes.roleId);
-            if (role) {
-                updatedUser = { ...updatedUser, role };
-            }
+        if (filters.size !== undefined) {
+            params = params.set('size', filters.size.toString());
         }
 
-        this.users.update(users => {
-            const newUsers = [...users];
-            newUsers[index] = updatedUser;
-            return newUsers;
-        });
+        if (filters.sort) {
+            params = params.set('sort', filters.sort);
+        }
 
-        return of(updatedUser).pipe(delay(300));
-    }
-
-    resetPassword(id: number, newPassword: string): Observable<void> {
-        console.log(`Password reset for user ${id}: ${newPassword}`);
-        return of(void 0).pipe(delay(300));
-    }
-
-    getRoles(): Observable<Role[]> {
-        return of(this.roles()).pipe(delay(300));
-    }
-
-    getRoleById(id: number): Observable<Role | undefined> {
-        const role = this.roles().find(r => r.id === id);
-        return of(role).pipe(delay(300));
+        return params;
     }
 }
