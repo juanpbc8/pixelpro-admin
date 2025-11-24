@@ -24,4 +24,5 @@ export interface AuthResponse {
     email: string;
     rol: string;
     authenticated: boolean;
+    token: string;
 }

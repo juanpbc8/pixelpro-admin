@@ -27,7 +27,7 @@ export class HeaderComponent {
         );
 
         if (confirmed) {
-            this.authService.logout().subscribe();
+            this.authService.logout();
         }
     }
 }
