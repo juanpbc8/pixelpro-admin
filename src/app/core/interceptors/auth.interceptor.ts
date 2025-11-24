@@ -21,8 +21,8 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
             // Manejo global de errores 401 Unauthorized
             if (error.status === 401) {
                 // Solo redirigir si no estamos ya en login
-                if (!router.url.includes('/login')) {
-                    router.navigate(['/login'], {
+                if (!router.url.includes('/auth/login')) {
+                    router.navigate(['/auth/login'], {
                         queryParams: { returnUrl: router.url }
                     });
                 }

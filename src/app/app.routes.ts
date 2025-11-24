@@ -1,11 +1,23 @@
 import { Routes } from '@angular/router';
 import { AdminLayoutComponent } from './layouts/admin-layout/admin-layout.component';
+import { AuthLayoutComponent } from './layouts/auth-layout/auth-layout.component';
 import { authGuard } from './core/auth/auth.guard';
 
 export const routes: Routes = [
     {
-        path: 'login',
-        loadComponent: () => import('./features/auth/pages/login/login.component').then(m => m.LoginComponent)
+        path: 'auth',
+        component: AuthLayoutComponent,
+        children: [
+            {
+                path: 'login',
+                loadComponent: () => import('./features/auth/pages/login/login.component').then(m => m.LoginComponent)
+            },
+            {
+                path: '',
+                redirectTo: 'login',
+                pathMatch: 'full'
+            }
+        ]
     },
     {
         path: '',
@@ -49,6 +61,6 @@ export const routes: Routes = [
     },
     {
         path: '**',
-        redirectTo: 'login'
+        redirectTo: 'auth/login'
     }
 ];

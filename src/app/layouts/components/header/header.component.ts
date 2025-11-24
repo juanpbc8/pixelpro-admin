@@ -1,6 +1,6 @@
 import { Component, ChangeDetectionStrategy, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { AuthService } from '../../auth/auth.service';
+import { AuthService } from '../../../core/auth/auth.service';
 import { AlertService } from '../../../shared/services/alert.service';
 
 @Component({

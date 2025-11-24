@@ -111,12 +111,12 @@ export class AuthService {
         ).pipe(
             tap(() => {
                 this.currentUser.set(null);
-                this.router.navigate(['/login']);
+                this.router.navigate(['/auth/login']);
             }),
             catchError(error => {
                 // Incluso si el logout falla, limpiar el estado local
                 this.currentUser.set(null);
-                this.router.navigate(['/login']);
+                this.router.navigate(['/auth/login']);
                 return throwError(() => error);
             })
         );
