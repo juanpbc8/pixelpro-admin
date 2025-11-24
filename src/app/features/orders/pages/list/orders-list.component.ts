@@ -7,7 +7,7 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { Subject } from 'rxjs';
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 import { OrderService } from '../../services/order.service';
-import { Order, OrderStatus, DeliveryType, OrderQueryParams, Page } from '../../models/order.model';
+import { Order, OrderStatus, DeliveryType, OrderQueryParams } from '../../models/order.model';
 
 @Component({
   selector: 'app-orders-list',

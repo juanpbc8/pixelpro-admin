@@ -1,5 +1,3 @@
-import { Page } from '../../../shared/models/page.model';
-
 export interface User {
     id: number;
     email: string;

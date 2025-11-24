@@ -1,5 +1,4 @@
 import { Category } from './category.model';
-import { Page } from '../../../../shared/models/page.model';
 
 export interface Product {
     id: number;

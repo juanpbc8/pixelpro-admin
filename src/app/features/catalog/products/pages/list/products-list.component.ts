@@ -6,7 +6,7 @@ import { FormsModule } from '@angular/forms';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Subject } from 'rxjs';
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
-import { Product, Page, ProductQueryParams } from '../../models/product.model';
+import { Product, ProductQueryParams } from '../../models/product.model';
 import { ProductService } from '../../services/product.service';
 import { Category } from '../../../categories/models/category.model';
 import { CategoryService } from '../../../categories/services/category.service';

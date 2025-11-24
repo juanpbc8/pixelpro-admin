@@ -1,5 +1,4 @@
 import { Address } from './address.model';
-import { Page } from '../../../shared/models/page.model';
 
 export enum DocumentType {
     DNI = 'DNI',

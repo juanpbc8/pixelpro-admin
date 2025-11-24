@@ -3,7 +3,6 @@ import { Payment } from './payment.model';
 import { Invoice } from './invoice.model';
 import { Customer } from './customer.model';
 import { Address } from './address.model';
-import { Page } from '../../../shared/models/page.model';
 
 export enum OrderStatus {
     PENDIENTE = 'PENDIENTE',

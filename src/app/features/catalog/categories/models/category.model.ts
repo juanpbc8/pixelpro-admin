@@ -1,5 +1,3 @@
-import { Page } from '../../../../shared/models/page.model';
-
 export interface Category {
     id: number;
     name: string;
