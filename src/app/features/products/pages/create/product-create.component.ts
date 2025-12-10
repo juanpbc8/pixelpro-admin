@@ -7,7 +7,7 @@ import { Category } from '../../../categories/models/category.model';
 import { CreateProductDto } from '../../models/product.model';
 import { ProductService } from '../../services/product.service';
 import { CategoryService } from '../../../categories/services/category.service';
-import { UploadService } from '../../../../../shared/services/upload.service';
+import { UploadService } from '../../../../shared/services/upload.service';
 
 @Component({
     selector: 'app-product-create',
