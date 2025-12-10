@@ -5,7 +5,7 @@ import { FormsModule } from '@angular/forms';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Category } from '../../models/category.model';
 import { CategoryService } from '../../services/category.service';
-import { AlertService } from '../../../../../shared/services/alert.service';
+import { AlertService } from '../../../../shared/services/alert.service';
 
 @Component({
   selector: 'app-categories-list',
