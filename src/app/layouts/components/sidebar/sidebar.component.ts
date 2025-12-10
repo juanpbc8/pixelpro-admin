@@ -18,7 +18,6 @@ export class SidebarComponent {
         { path: '/categories', label: 'Categorías', icon: 'bi-tags' },
         { path: '/orders', label: 'Órdenes', icon: 'bi-cart-check' },
         { path: '/customers', label: 'Clientes', icon: 'bi-people' },
-        { path: '/users', label: 'Usuarios y Roles', icon: 'bi-person-badge' },
-        { path: '/settings', label: 'Configuración', icon: 'bi-gear' }
+        { path: '/users', label: 'Usuarios y Roles', icon: 'bi-person-badge' }
     ];
 }
